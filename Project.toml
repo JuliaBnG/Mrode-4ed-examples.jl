@@ -1,0 +1,37 @@
+name = "Mrode4edExamples"
+uuid = "b56a7855-8a13-4fa1-84d6-ebe16836d4f5"
+version = "0.1.0"
+authors = ["Xijiang Yu <xijiang@users.noreply.github.com>"]
+
+[deps]
+Breeding = "cb565f4f-111b-40c2-8768-3bafadb18772"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RelationshipMatrices = "d4d45922-7dca-4708-ac5a-a6dbb0551829"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[sources]
+# until the registration of Breeding v0.1.4 in General is merged
+Breeding = {url = "https://github.com/JuliaBnG/Breeding.jl", rev = "main"}
+
+[compat]
+Breeding = "0.1.4"
+DataFrames = "1.8"
+Distributions = "0.25"
+LinearAlgebra = "1.12"
+Printf = "1.11"
+Random = "1.11"
+RelationshipMatrices = "0.6"
+SparseArrays = "1.12"
+Statistics = "1.11"
+julia = "1.12"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

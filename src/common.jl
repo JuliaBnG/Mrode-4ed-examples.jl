@@ -25,9 +25,11 @@ end
 
 Print named columns as a rounded table.
 """
-show_table(; digits = 3, cols...) =
-    println(DataFrame([k => (eltype(v) <: AbstractFloat ? round.(v; digits) : v)
-                       for (k, v) in cols]))
+show_table(; digits = 3, cols...) = println(
+    DataFrame([
+        k => (eltype(v) <: AbstractFloat ? round.(v; digits) : v) for (k, v) in cols
+    ]),
+)
 
 """
     list_examples([io])
@@ -63,7 +65,7 @@ function run_examples(selection = :; quiet = false)
         quiet || println("\n", "="^72, "\n", e.name, " – ", e.title)
         f = getfield(@__MODULE__, e.name)
         quiet ? redirect_stdout(f, devnull) : f()
-        (name = e.name, checks = NCHECKS[] - n0, failed = FAILED[f0+1:end])
+        (name = e.name, checks = NCHECKS[] - n0, failed = FAILED[(f0+1):end])
     end
     nfail = sum(length(r.failed) for r in results)
     total = sum(r.checks for r in results)

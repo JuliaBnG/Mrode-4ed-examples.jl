@@ -14,6 +14,11 @@ edition, as a package built on the JuliaBnG packages:
   prediction, Bayes A/B/C/Cπ, threshold models, REML, Gibbs samplers
   and covariance functions.
 
+[![Documentation](https://img.shields.io/badge/docs-juliabng.github.io-blue.svg)](https://juliabng.github.io/#applications)
+
+The documentation and API reference are available at
+[juliabng.github.io/Mrode-4ed-examples](https://juliabng.github.io/Mrode-4ed-examples/).
+
 ## Installation
 
 ```julia

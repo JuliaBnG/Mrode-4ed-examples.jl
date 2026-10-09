@@ -1,0 +1,13 @@
+[deps]
+Breeding = "cb565f4f-111b-40c2-8768-3bafadb18772"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Mrode4edExamples = "b56a7855-8a13-4fa1-84d6-ebe16836d4f5"
+RelationshipMatrices = "d4d45922-7dca-4708-ac5a-a6dbb0551829"
+
+[compat]
+Documenter = "1"
+
+[sources]
+Breeding = {url = "https://github.com/JuliaBnG/Breeding.jl", rev = "main"}
+Mrode4edExamples = {path = ".."}

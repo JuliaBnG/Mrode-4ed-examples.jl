@@ -22,10 +22,22 @@ where:
 -  Linear spline model (Section 10.3.5): Continuous piecewise linear functions defined by
   knot points.
 
+# Key Concepts Illustrated
+1. **Full-order fit** ``\\hat{C} = \\Phi^{-1} G (\\Phi')^{-1}``, in Julia `Φ \\ G / Φ'`.
+2. **Reduced-order fit by WLS**, written out with
+   ``\\mathrm{vec}(\\Phi C \\Phi') = (\\Phi \\otimes \\Phi)\\,\\mathrm{vec}(C)``: the design
+   matrix is ``X = L(\\Phi_2 \\otimes \\Phi_2)D``, with ``L`` picking the lower triangle of
+   ``G`` and ``D`` the duplication matrix of ``C``. Both compared with
+   `covariance_function`.
+3. **Continuity**: variances and covariances at any age, tabulated over 90–240 days
+   for the full- and reduced-order functions.
+
 # Returns
 A `NamedTuple` with fields:
 - `f`: Full-order covariance function fit (`f.C`, `f.T`, `f.Φ`).
 - `r`: Reduced-order covariance function fit (`r.C`, `r.χ²`, `r.df`).
+- `cf`: Table of variances (full and reduced order) and covariances with age 90.
+- `spline`: Table of linear spline covariables at the ten DIM.
 """
 function ex_10_3()
     println("Section 10.4: covariance functions for body weight at 90, 160, 240")
@@ -34,8 +46,11 @@ function ex_10_3()
     G = [132.3 127.0 136.6; 127.0 172.8 200.8; 136.6 200.8 288.0]
     ages = [90, 160, 240]
 
-    # 2. Full-order covariance function fit (Eqn 10.9)
+    # 2. Full-order covariance function fit (Eqn 10.9): G = Φ C Φ', so
+    #    Ĉ = Φ⁻¹ G (Φ')⁻¹, in Julia Φ \ G / Φ'
     f = covariance_function(G, ages)
+    Φ = legendre(ages, 3)
+    check("Ĉ = Φ \\ G / Φ' (covariance_function)", Φ \ G / Φ', f.C; atol = 1e-10)
     check(
         "Φ",
         f.Φ,
@@ -72,17 +87,45 @@ function ex_10_3()
     check("reduced fit Č", r.C, [341.8512 45.0421; 45.0421 24.5405]; atol = 0.01)
     check("χ² (3 df)", [r.χ², r.df], [0.2231, 3]; atol = 1e-3)
 
+    #    The same fit written out. vec(Φ₂ C Φ₂') = (Φ₂ ⊗ Φ₂) vec(C); keeping the
+    #    distinct elements, vech(G) = X vech(C) + error with X = L (Φ₂ ⊗ Φ₂) D,
+    #    where L picks the lower triangle of G and D duplicates vech(C) into vec(C).
+    #    WLS: vech(Č) = (X'V⁻¹X)⁻¹ X'V⁻¹ vech(G), χ² = ê'V⁻¹ê
+    n, k = length(ages), 2
+    Φ2 = legendre(ages, k)
+    vech(n) = [LinearIndices((n, n))[i, j] for j = 1:n for i = j:n]
+    L = I(n^2)[vech(n), :]
+    D = zeros(k^2, length(vech(k)))
+    for (c, (p, q)) in enumerate((p, q) for q = 1:k for p = q:k)
+        D[LinearIndices((k, k))[p, q], c] = D[LinearIndices((k, k))[q, p], c] = 1
+    end
+    X = L * kron(Φ2, Φ2) * D
+    g = vec(G)[vech(n)]
+    Vi = inv(V)
+    c = (X'Vi*X) \ (X'Vi*g)
+    ê = g - X * c
+    check("WLS vech(Č) = covariance_function()", c, vec(r.C)[vech(k)]; atol = 1e-8)
+    check("χ² = ê'V⁻¹ê", ê'Vi*ê, r.χ²; atol = 1e-10)
+
+    # 4b. The covariance function is continuous: variances at any age, full
+    #     order (exact at 90, 160, 240) and reduced order
+    cf = DataFrame(age = 90:10:240)
+    ϕa = legendre(cf.age, 3; tmin = 90, tmax = 240)
+    cf.var_full = diag(ϕa * f.C * ϕa')
+    cf.var_k2 = diag(ϕa[:, 1:2] * r.C * ϕa[:, 1:2]')
+    cf.cov_90 = ϕa * f.C * ϕa[1, :]
+    println("\nVariances and covariance with age 90 from the covariance functions:")
+    show_table(cf; digits = 2)
+
     # 5. Linear spline covariables with knots at days 4, 106, 208, 310 (Section 10.3.5)
     # Note: Mrode's table puts the larger weight on the farther knot; standard linear
     # interpolation is computed here.
-    F = linear_spline([4, 38, 72, 106, 140, 174, 208, 242, 276, 310], [4, 106, 208, 310])
-    show_table(
-        DIM = [4, 38, 72, 106, 140, 174, 208, 242, 276, 310],
-        F0 = F[:, 1],
-        F1 = F[:, 2],
-        F2 = F[:, 3],
-        F3 = F[:, 4],
-    )
+    spline = DataFrame(DIM = [4, 38, 72, 106, 140, 174, 208, 242, 276, 310])
+    F = linear_spline(spline.DIM, [4, 106, 208, 310])
+    spline.F0, spline.F1, spline.F2, spline.F3 = eachcol(F)
+    check("spline covariables sum to 1", sum(F; dims = 2), ones(10); atol = 1e-12)
+    println("\nLinear spline covariables:")
+    show_table(spline)
 
-    (; f, r)
+    (; f, r, cf, spline)
 end

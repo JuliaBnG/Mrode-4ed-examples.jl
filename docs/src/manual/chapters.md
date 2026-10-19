@@ -144,8 +144,12 @@ Models continuous longitudinal or trajectory traits (e.g. test-day milk yields):
   \mathrm{Diag}(\phi_2)Z]$ and $\sigma^2_e G^{-1} \otimes A^{-1}$, checked
   against `mme`. Calculation of 305-day cumulative lactation breeding
   values and reliabilities, added as columns of the pedigree.
-- **`ex_10_3` (Sections 10.4 and 10.3.5)**: Random regression using
-  linear splines and covariance functions.
+- **`ex_10_3` (Sections 10.4 and 10.3.5)**: Covariance functions and
+  linear splines. The full-order fit is $\Phi \backslash G / \Phi'$; the
+  reduced-order WLS fit is written out with
+  $X = L(\Phi_2 \otimes \Phi_2)D$ and checked against
+  `covariance_function`. Variances and covariances are tabulated over
+  ages, and spline covariables at the ten DIM.
 
 ---
 

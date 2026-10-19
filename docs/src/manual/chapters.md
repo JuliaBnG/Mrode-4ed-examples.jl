@@ -104,7 +104,10 @@ Simultaneous genetic evaluation of multiple genetically correlated traits:
 Models accounting for both the direct genetic ability of an animal and the maternal genetic/environmental contribution of its dam:
 - **`ex_08_1` (Section 8.2)**: Maternal animal model with correlated
   direct ($a$) and maternal ($m$) genetic effects ($\sigma_{am}$
-  covariance).
+  covariance) and maternal permanent environment, on one data table.
+  The MME, with direct and maternal blocks weighted by
+  $\alpha = \sigma^2_e G_0^{-1}$, are written out and checked against
+  `mme`.
 - **`ex_08_2` (Section 8.3)**: Maternal Reduced Animal Model (RAM).
 
 ---

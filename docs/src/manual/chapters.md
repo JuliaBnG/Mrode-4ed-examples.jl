@@ -187,8 +187,11 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
   \Sigma$, with $T = [X\ W\ Z]$ or $[X\ W\ W]$, and checked against
   `mme`; polygenic, genomic and total values are added to the bull
   table.
-- **`ex_11_8` (Section 11.6)**: Haplotype-based genomic prediction
-  models.
+- **`ex_11_8` (Section 11.6)**: Haplotype-based genomic prediction:
+  pseudo-SNPs from phased haplotypes (the coding written out and checked
+  against `pseudo_snps`), $G_h = Z_hZ_h'/2\sum pq$, and GBLUP with $G$
+  and $G_h$ written out and checked against `mme`; DGV of all models in
+  a table of animals.
 - **`ex_11_9` (Section 11.7)**: The Bayesian Alphabet:
   - **BayesA**: Student-$t$ prior via locus-specific scaled inverse chi-square variance draws.
   - **BayesB**: Point mass mixture prior (variable selection with locus-specific variances).

@@ -19,6 +19,14 @@ where:
   pseudo-SNPs.
 - Solves GBLUP using both the standard SNP-based ``G`` and the haplotype-based ``G_h``.
 
+# Key Concepts Illustrated
+1. **Pseudo-SNP coding** written out: per block, the distinct haplotypes are
+   the alleles and the dosage is the number of strands carrying each; compared
+   with `pseudo_snps`. ``G_h = Z_hZ_h'/2\\sum pq`` from the centred pseudo-SNPs.
+2. **GBLUP** with ``W = I`` (one record per animal), MME
+   ``[n\\ \\mathbf{1}';\\ \\mathbf{1}\\ I + \\lambda K^{-1}]`` for each ``K``; written out and compared
+   with `mme`. The DGV of all three models are columns of a table of animals.
+
 # Notes on Text Discrepancies
 1.  The book prints animal 5's block-2 pseudo-SNPs as `01000`, although its haplotypes `001`
    and `000` give `01001`. The book's printed ``G_h``, ``2\\sum pq = 4.42``, and haplotype
@@ -33,6 +41,7 @@ A `NamedTuple` with fields:
 - `Gh`: Corrected haplotype-based genomic relationship matrix.
 -  `sol`: GBLUP solutions under SNP model, book's pseudo-SNP model, and corrected haplotype
   model.
+- `animals`: Table of the animals with records and the DGV of the three models.
 """
 function ex_11_8()
     println("Example 11.8: SNP- and haplotype-based GBLUP")
@@ -52,8 +61,17 @@ function ex_11_8()
     ]
     M = H[1:2:end, :] + H[2:2:end, :]
 
-    # 2. Construct pseudo-SNPs for 3 blocks of 3 SNPs
-    P, alleles = pseudo_snps(H, [1:3, 4:6, 7:9])
+    # 2. Pseudo-SNPs for 3 blocks of 3 SNPs: in each block, every distinct
+    #    haplotype is an allele, and an animal's dosage of it is the number of
+    #    its two strands carrying it
+    blocks = [1:3, 4:6, 7:9]
+    P, alleles = pseudo_snps(H, blocks)
+    Pe = reduce(hcat, map(blocks) do b
+        hb = collect(eachrow(H[:, b]))
+        al = unique(hb)                         # alleles in order of appearance
+        [count(==(a), hb[2i-1:2i]) for i = 1:size(M, 1), a in al]
+    end)
+    check("pseudo-SNPs = pseudo_snps()", Pe, P; atol = 0)
 
     # Note on book typo:
     # Animal 5's block-2 pseudo-SNPs were printed as 01000 instead of 01001.
@@ -79,6 +97,8 @@ function ex_11_8()
     G = grm(Matrix{Int8}(M'), ps)
     Gb = grm(Matrix{Int8}(Pbook'), pb)
     Gh = grm(Matrix{Int8}(P'), ph)
+    Zh = P .- 2ph'
+    check("Gₕ = ZₕZₕ'/2Σpq (corrected pseudo-SNPs)", Gh, Zh * Zh' / kh; atol = 1e-12)
 
     check("2Σpq for SNPs and the book's pseudo-SNPs", [ks, kb], [4.06, 4.42]; atol = 0.005)
     check("G, last row", G[5, :], [-0.424, -0.227, 0.167, -0.522, 1.005])
@@ -88,19 +108,24 @@ function ex_11_8()
         [-0.235, -0.100, 0.036, -0.281, 0.579],
     )
 
-    # 4. Fit GBLUP models
-    wwg = [4.5, 2.9, 3.9, 3.5, 5.0]
-    sol = map((G, Gb, Gh)) do K
-        m = mme(wwg, ones(5, 1), [RandomEffect(I(5), inv(K + 0.01I), 20.0)]; σ²e = 40.0)
-        solve_mme(m)
+    # 4. GBLUP with each relationship matrix. Every animal has one record, so
+    #    W = I and the MME are [n 1'; 1 I + λK⁻¹], λ = σ²e/σ²a = 2
+    animals = DataFrame(animal = 1:5, wwg = [4.5, 2.9, 3.9, 3.5, 5.0])
+    y = animals.wwg
+    X = ones(5, 1)
+    λ = 40.0 / 20.0
+    sol = map((("SNP", G), ("book haplotype", Gb), ("haplotype", Gh))) do (lab, K)
+        Ki = inv(K + 0.01I)
+        lhs = [X'X X'; X I + λ * Ki]
+        m = mme(y, X, [RandomEffect(I(5), Ki, 20.0)]; σ²e = 40.0)
+        check("$lab: mme() LHS = [n 1'; 1 I + λK⁻¹]", m.lhs, lhs; atol = 1e-10)
+        lhs \ [X'y; y]
     end
-
-    show_table(
-        effect = ["mean", string.(1:5)...],
-        SNP = sol[1],
-        haplotype_book = sol[2],
-        haplotype_corrected = sol[3],
-    )
+    animals.dgv_snp = sol[1][2:end]
+    animals.dgv_hap_book = sol[2][2:end]
+    animals.dgv_hap = sol[3][2:end]
+    println("Means: ", round.(first.(sol); digits = 3))
+    show_table(animals)
     check("SNP-based GBLUP", sol[1], [3.960, 0.253, -0.474, 0.057, -0.224, 0.388])
     check(
         "haplotype-based GBLUP (book's pseudo-SNPs)",
@@ -120,5 +145,5 @@ function ex_11_8()
         cor(sol[1][2:end], sol[3][2:end])
     )
 
-    (; G, Gh, sol)
+    (; G, Gh, sol, animals)
 end

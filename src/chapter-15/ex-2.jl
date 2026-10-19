@@ -51,6 +51,13 @@ P(\\text{difficult} \\mid \\text{profile}, \\text{sire } j) =
 # Linear Approximation (Section 15.3)
 Treats binary scores as continuous in a standard bivariate linear mixed model via MME.
 
+# Tables
+The 47 calvings are one table (sire, origin, season, sex, BW, CD). The sire solutions
+of the threshold-linear model, the probabilities of difficult calving and the solutions
+of the bivariate linear model are collected in a table of sires. The linear model's MME
+are those of Example 6.1 with sire effects, written out with `kron` and compared with
+`mme`.
+
 # Returns
 A `JointBinaryResult` with the BW solutions `b1` (fixed) and `u1` (sires), the
 liability-scale solutions `τ` (fixed) and `ν` (sires), the residual regression `β`, the
@@ -240,20 +247,23 @@ function ex_15_2()
         1,
     ]
     sire = [fill(1, 10); fill(2, 7); fill(3, 6); fill(4, 4); fill(5, 11); fill(6, 9)]
+    #    one row per calving (sex 1 = male, 2 = female)
+    rec = DataFrame(; sire, origin, season, sex, bw = Float64.(bw), cd)
+    println(first(rec, 6), "\n  … ", nrow(rec), " calvings")
 
     # Step 2: Sire – maternal grandsire pedigree relationship matrix
     Ai = Matrix(ainv_smgs(DataFrame(sire = [0, 0, 1, 2, 3, 2], mgs = [0, 0, 0, 1, 2, 3])))
     check("A⁻¹ (sire–MGS), first row", Ai[1, :], [1.424, 0.182, -0.667, -0.364, 0, 0])
 
     # Step 3: Design matrices and genetic covariance
-    X = [first(incidence(origin)) first(incidence(season)) first(incidence(sex))]
-    Z, _ = incidence(sire)
+    X = [first(incidence(rec.origin)) first(incidence(rec.season)) first(incidence(rec.sex))]
+    Z, _ = incidence(rec.sire)
     G = [0.7178 0.1131; 0.1131 0.0466]
 
     # Step 4: Joint threshold-linear estimation
     r = joint_binary_quantitative(
-        bw,
-        cd,
+        rec.bw,
+        rec.cd,
         X,
         Z,
         X,
@@ -277,7 +287,7 @@ function ex_15_2()
         "female",
         "sire " .* string.(1:6)...,
     ]
-    show_table(effect = names, BW = [r.b1; r.u1], CD = [r.τ; r.ν]; digits = 4)
+    show_table(effect = names[1:6], BW = r.b1, CD = r.τ; digits = 4)
 
     check(
         "iteration 0: BW",
@@ -372,17 +382,29 @@ function ex_15_2()
         atol = 2e-3,
     )
 
-    # Step 6: Bivariate linear model approximation (Section 15.3)
+    # Step 6: Bivariate linear model approximation (Section 15.3). Both traits are
+    #    recorded on every calving, so the MME are those of Example 6.1, here with
+    #    sire effects: [R₀⁻¹⊗X'X R₀⁻¹⊗X'Z; R₀⁻¹⊗Z'X R₀⁻¹⊗Z'Z + G₀⁻¹⊗A⁻¹]
     R0 = [20 2.089; 2.089 1.036]
-    y, obs = mt_stack([bw cd])
+    Y = [rec.bw rec.cd]
     keepX = setdiff(1:6, [4, 6])
+    Xk = X[:, keepX]
+    R0i = inv(R0)
+    lhs = [
+        kron(R0i, Xk'Xk)  kron(R0i, Xk'Z)
+        kron(R0i, Z'Xk)   kron(R0i, Z'Z) + kron(inv(G), Ai)
+    ]
+    rhs = [kron(R0i, Xk'); kron(R0i, Z')] * vec(Y)
+    y, obs = mt_stack(Y)
     m = mme(
         y,
-        reduce(hcat, mt_blocks(obs, [X[:, keepX], X[:, keepX]])),
+        reduce(hcat, mt_blocks(obs, [Xk, Xk])),
         [RandomEffect(mt_blocks(obs, [Z, Z]), Ai, G)];
         Rinv = mt_rinv(R0, obs),
     )
-    b, (u,) = solutions(m, solve_mme(m))
+    check("linear model: mme() LHS = Kronecker form", m.lhs, lhs; atol = 1e-10)
+    x = lhs \ rhs
+    b, u = x[m.blocks[1]], reshape(x[m.blocks[2]], :, 2)
     check(
         "linear model: BW",
         [b[1:4]; u[:, 1]],
@@ -406,5 +428,12 @@ function ex_15_2()
         [0.1349, 0.0876, -0.0311, 0.2410, -0.0527, 0.0285, -0.0427, 0.0350, 0.0195, 0.0323];
         atol = 1e-3,
     )
+
+    sires = DataFrame(sire = 1:6, u1 = r.u1, ν = r.ν, u2 = r.ν + r.β * r.u1, P_difficult = V)
+    sires.lin_bw, sires.lin_cd = u[:, 1], u[:, 2]
+    println("\nSires: BW (u1) and liability (ν, u2 = ν + βu1) solutions, probability of")
+    println("difficult calving (origin 2, season 1, male), and the linear-model solutions:")
+    show_table(sires; digits = 4)
+
     r
 end

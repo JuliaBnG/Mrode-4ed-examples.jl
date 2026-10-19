@@ -276,7 +276,11 @@ Evaluation of categorical and disease resistance traits:
   solutions, standard errors and probabilities are kept in a table of
   sires.
 - **`ex_15_2` (Section 15.3)**: Joint analysis of continuous and binary
-  threshold traits.
+  threshold traits, on a table of the 47 calvings. The bivariate linear
+  approximation uses the Kronecker MME of `ex_06_1` with sire effects,
+  written out and checked against `mme`; sire solutions of both models
+  and the probabilities of difficult calving are kept in a table of
+  sires.
 
 ---
 

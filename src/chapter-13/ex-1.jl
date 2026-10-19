@@ -22,21 +22,41 @@ where:
 -  Variance components: ``\\sigma_a^2 = 90.0``, ``\\sigma_d^2 = 80.0``,
   ``\\sigma_e^2 = 120.0``.
 
+# Key Concepts Illustrated
+1. **One table for the data**: pedigree, pen and weaning weight of all 12 pigs;
+   breeding values and dominance deviations are added as columns.
+2. **``D`` by Cockerham's rule**, written out and compared with `drm`.
+3. **MME** as ``T'T + \\Sigma`` with ``T = [X\\ Z\\ Z]`` (the same ``Z`` for additive and
+   dominance effects) and ``\\Sigma`` holding ``\\lambda_a A^{-1}`` and ``\\lambda_d D^{-1}``;
+   compared with `mme`.
+
 # Returns
 A `NamedTuple` with fields:
 - `b`: Fixed pen effect solutions.
 - `a`: Vector of estimated breeding values for all 12 pigs.
 - `d`: Vector of estimated dominance deviations for all 12 pigs.
+- `ped`: The data with columns `bv` and `dv` added.
 """
 function ex_13_1()
     println("Example 13.1: additive and dominance effects solved separately")
 
-    # 1. Load data and setup variables
-    (; ped, pig, pen, ww, σ²a, σ²d, σ²e) = data_13_1()
+    # 1. Pedigree, pens and records, one row per pig (records on pigs 5–12)
+    (; ped, σ²a, σ²d, σ²e) = data_13_1()
+    rec = dropmissing(ped, :ww)
     N = nrow(ped)
 
-    # 2. Construct pedigree dominance relationship matrix D and its inverse
-    D = drm(ped)                                # Cockerham's rule
+    # 2. Dominance relationships by Cockerham's rule: for i ≠ j,
+    #    Dᵢⱼ = ¼(A_{sᵢsⱼ} A_{dᵢdⱼ} + A_{sᵢdⱼ} A_{dᵢsⱼ}), unknown parents
+    #    contributing 0; Dᵢᵢ = 1 as no pig is inbred
+    D = drm(ped)
+    A = inv(Matrix(ainv(ped)))
+    a(i, j) = i > 0 && j > 0 ? A[i, j] : 0.0
+    s, d = ped.sire, ped.dam
+    De = [
+        i == j ? 1.0 : (a(s[i], s[j]) * a(d[i], d[j]) + a(s[i], d[j]) * a(d[i], s[j])) / 4
+        for i = 1:N, j = 1:N
+    ]
+    check("D by Cockerham's rule = drm()", De, D; atol = 1e-12)
     Di = inv(D)
     check(
         "D, rows 7 and 11 (columns 7–12)",
@@ -50,15 +70,22 @@ function ex_13_1()
         atol = 1e-3,
     )
 
-    # 3. Setup incidence matrices and MME with additive and dominance effects
-    X, _ = incidence(pen)
-    Z = incidence(pig, N)
-    m = mme(ww, X, [RandomEffect(Z, ainv(ped), σ²a), RandomEffect(Z, Di, σ²d)]; σ²e)
+    # 3. MME (R = Iσ²e) as T'T + Σ: the same Z links a record to the pig's
+    #    additive and its dominance effect, T = [X Z Z]
+    y = rec.ww
+    X, _ = incidence(rec.pen)
+    Z = incidence(rec.pig, N)
+    Ai = ainv(ped)
+    T = [X Z Z]
+    Σ = blockdiag(spzeros(2, 2), sparse(σ²e / σ²a * Ai), sparse(σ²e / σ²d * Di))
+    m = mme(y, X, [RandomEffect(Z, Ai, σ²a), RandomEffect(Z, Di, σ²d)]; σ²e)
+    check("mme() LHS = T'T + Σ", m.lhs, T'T + Σ; atol = 1e-10)
 
     # 4. Solve MME
-    b, (a, d) = solutions(m, solve_mme(m))
-
-    show_table(animal = 1:N, BV = vec(a), DV = vec(d))
+    x = (T'T + Σ) \ (T'y)
+    b, a, d = x[m.blocks[1]], x[m.blocks[2]], x[m.blocks[3]]
+    ped.bv, ped.dv = a, d
+    show_table(ped)
     check("pen", b, [16.980, 20.030])
     check(
         "breeding values",
@@ -84,5 +111,5 @@ function ex_13_1()
         [0, 0, 0, 0, 0.136, 0.705, 0.237, -0.993, 0, -1.333, 1.428, -0.038],
     )
 
-    (; b, a = vec(a), d = vec(d))
+    (; b, a, d, ped)
 end

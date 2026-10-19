@@ -4,20 +4,23 @@
     data_13_1() -> NamedTuple
 
 Pedigree, management pens, and weaning weights of pigs 1–12 (records on pigs 5–12)
-used in Examples 13.1 and 13.2 for pedigree additive and dominance models.
+used in Examples 13.1 and 13.2 for pedigree additive and dominance models. `ped` holds
+all of it, one row per pig (IDs are row numbers; pigs 1–4 have no records); `pig`,
+`pen` and `ww` are the records as vectors.
 """
-data_13_1() = (
+function data_13_1()
+    no4 = fill(missing, 4)
     ped = DataFrame(
+        pig = 1:12,
         sire = [0, 0, 0, 0, 1, 3, 6, 0, 3, 3, 6, 6],
         dam = [0, 0, 0, 0, 2, 4, 5, 5, 8, 8, 8, 8],
-    ),
-    pig = 5:12,
-    pen = [1, 1, 1, 1, 2, 2, 2, 2],
-    ww = [17.0, 20.0, 18.0, 13.5, 20.0, 15.0, 25.0, 19.5],
-    σ²a = 90.0,
-    σ²d = 80.0,
-    σ²e = 120.0,
-)
+        pen = [no4; [1, 1, 1, 1, 2, 2, 2, 2]],
+        ww = [no4; [17.0, 20.0, 18.0, 13.5, 20.0, 15.0, 25.0, 19.5]],
+    )
+    @assert ped.pig == 1:nrow(ped)
+    rec = dropmissing(ped, :ww)
+    (; ped, pig = rec.pig, pen = rec.pen, ww = rec.ww, σ²a = 90.0, σ²d = 80.0, σ²e = 120.0)
+end
 
 """
     data_13_3() -> NamedTuple

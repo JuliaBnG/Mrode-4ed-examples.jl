@@ -228,7 +228,9 @@ Integration of genotyped and non-genotyped animals into unified national evaluat
 
 Partitioning non-additive genetic variation for commercial crossing and mating allocation:
 - **`ex_13_1`–`ex_13_2` (Sections 13.2–13.3)**: Pedigree-based dominance
-  relationship matrix ($D$) and dominance BLUP.
+  relationship matrix ($D$), built by Cockerham's rule and checked
+  against `drm`, and dominance BLUP with the MME written as $T'T +
+  \Sigma$, $T = [X\ Z\ Z]$, on one data table.
 - **`ex_13_3` (Section 13.4)**: Genomic dominance relationship matrices
   and estimation of genomic inbreeding depression.
 - **`ex_13_5` (Section 13.5)**: Additive-by-additive ($A \odot A$ or $G \odot G$) epistatic relationship models.

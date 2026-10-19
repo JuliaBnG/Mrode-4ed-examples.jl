@@ -1,5 +1,5 @@
 """
-    ex_19_1() -> Nothing
+    ex_19_1() -> DataFrame
 
 Run Examples 19.1 and 19.2 from Mrode & Pocrnic (2023): Solving the Mixed Model Equations
 from Example 4.1 using iterative methods on the explicit coefficient matrix:
@@ -24,16 +24,41 @@ For the linear system ``C\\mathbf{x} = \\mathbf{r}``:
   Immediately incorporates newly updated values ``x_j^{(k+1)}`` within the same round,
   typically converging in fewer iterations without requiring relaxation.
 
+# Written Out
+Mrode's starting values are computed from the records with `groupby`; both iterations
+are written as explicit loops and compared with `jacobi` and `gauss_seidel`. The
+convergence criterion of both methods by round is collected in a table.
+
 # Returns
-Nothing: the iterates and solutions are printed and checked against the book.
+The table of the convergence criterion by round (`round`, `conv_jacobi`,
+`conv_gauss_seidel`); the iterates and solutions are printed and checked against the
+book.
 """
 function ex_19_1()
     (; m, x0) = data_19()
+    check(
+        "starting values from the records",
+        x0,
+        [4.333, 3.400, 0, 0, 0, 0.167, -0.500, 0.500, -0.833, 0.667],
+    )
+    C, r = Matrix(m.lhs), m.rhs
+    n = length(r)
+    conv(x, xo) = sum(abs2, x - xo) / sum(abs2, x)  # Mrode's convergence criterion
 
     # Step 1: Jacobi iteration with relaxation factor ω = 0.8 on animal equations
     println("Example 19.1: Jacobi iteration")
     ω = [1.0; 1.0; fill(0.8, 8)]
-    x, it, conv, H = jacobi(m.lhs, m.rhs; x0, ω, maxiter = 20, tol = 0, history = true)
+    x, it, cj, H = jacobi(m.lhs, m.rhs; x0, ω, maxiter = 20, tol = 0, history = true)
+    #    written out: every equation uses the previous round only,
+    #    xᵢ ← xᵢ + ωᵢ (rᵢ - Cᵢ'x)/Cᵢᵢ
+    xj = copy(x0)
+    convj = Float64[]
+    for _ = 1:20
+        xo = copy(xj)
+        xj = xo + ω .* (r - C * xo) ./ diag(C)
+        push!(convj, conv(xj, xo))
+    end
+    check("Jacobi written out = jacobi() (round 20)", xj, H[:, 21]; atol = 1e-12)
     check(
         "round 1",
         H[:, 2],
@@ -49,11 +74,22 @@ function ex_19_1()
         H[:, 21],
         [4.358, 3.404, 0.099, -0.018, -0.041, -0.008, -0.185, 0.177, -0.249, 0.183],
     )
-    @printf("  CONV after 20 rounds: %.1e (book 3.0e-9)\n", conv)
+    @printf("  CONV after 20 rounds: %.1e (book 3.0e-9)\n", cj)
 
     # Step 2: Gauss–Seidel iteration
     println("Example 19.2: Gauss–Seidel iteration")
-    x, it, conv, H = gauss_seidel(m.lhs, m.rhs; x0, maxiter = 20, tol = 0, history = true)
+    x, it, cg, H = gauss_seidel(m.lhs, m.rhs; x0, maxiter = 20, tol = 0, history = true)
+    #    written out: each equation uses the values already updated in this round
+    xg = copy(x0)
+    convg = Float64[]
+    for _ = 1:20
+        xo = copy(xg)
+        for i = 1:n
+            xg[i] += (r[i] - C[i, :]' * xg) / C[i, i]
+        end
+        push!(convg, conv(xg, xo))
+    end
+    check("Gauss–Seidel written out (round 20)", xg, H[:, 21]; atol = 1e-12)
     check(
         "round 1",
         H[:, 2],
@@ -70,6 +106,11 @@ function ex_19_1()
         [4.359, 3.405, 0.098, -0.019, -0.041, -0.009, -0.186, 0.177, -0.250, 0.183],
     )
     check("= direct solution", x, solve_mme(m); atol = 1e-4)
-    @printf("  CONV after 20 rounds: %.1e (book 8e-11)\n", conv)
-    nothing
+    @printf("  CONV after 20 rounds: %.1e (book 8e-11)\n", cg)
+
+    rounds = DataFrame(round = 1:20, conv_jacobi = convj, conv_gauss_seidel = convg)
+    println("\nConvergence criterion by round:")
+    fmt = ByRow(v -> @sprintf("%.1e", v))
+    println(transform(rounds, [:conv_jacobi, :conv_gauss_seidel] .=> fmt; renamecols = false))
+    rounds
 end

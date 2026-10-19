@@ -320,7 +320,11 @@ Markov Chain Monte Carlo (MCMC) Bayesian parameter estimation:
 
 High-performance linear solvers for systems with millions of equations:
 - **`ex_19_1` (Section 19.4)**: Stationary iterative solvers (Jacobi
-  with relaxation and Gauss-Seidel).
+  with relaxation and Gauss-Seidel) on the MME of `ex_04_1`. Mrode's
+  starting values are computed from the records with `groupby`; both
+  iterations are written as explicit loops and checked against `jacobi`
+  and `gauss_seidel`, and the convergence criterion of both is tabulated
+  by round.
 - **`ex_19_3` (Sections 19.5.1, 19.5.2 and 19.6)**: Iteration on Data
   (IOD) for massive pedigrees:
   - Gauss-Seidel on data without and with genetic groups.

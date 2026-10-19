@@ -183,7 +183,10 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
   imputed genotypes are shown for the ungenotyped ancestors.
 - **`ex_11_7` (Section 11.5)**: SNP-BLUP and GBLUP with a residual
   polygenic effect $u \sim N(0, A\sigma^2_u)$ (10 % of $\sigma^2_a$),
-  fitted as a separate random effect.
+  fitted as a separate random effect. Both models are written as $T'T +
+  \Sigma$, with $T = [X\ W\ Z]$ or $[X\ W\ W]$, and checked against
+  `mme`; polygenic, genomic and total values are added to the bull
+  table.
 - **`ex_11_8` (Section 11.6)**: Haplotype-based genomic prediction
   models.
 - **`ex_11_9` (Section 11.7)**: The Bayesian Alphabet:

@@ -21,6 +21,14 @@ where:
   2.  **GBLUP + Polygenic** (Eqn 11.16): Fits two random animal effects
      (``u \\sim N(0, A \\sigma_u^2)`` and ``a_g \\sim N(0, G \\sigma_g^2)``).
 
+# Key Concepts Illustrated
+1. **Two genetic effects per record**: a polygenic effect through ``W`` with
+   ``A^{-1}``, and a genomic one, either SNP effects through ``Z`` or a second
+   animal effect through the same ``W`` with ``G^{-1}``. Both models are written
+   as ``T'T + \\Sigma`` (``T = [X\\ W\\ Z]`` or ``[X\\ W\\ W]``) and compared with `mme`.
+2. **Tables**: polygenic, genomic and total values of both models are added as
+   columns of the bull table.
+
 # Notes on Text Discrepancies
 The book's Table 11.4 headings label the results as "DGV", but the printed values represent
 ``\\mathrm{DGV} + \\hat{u}`` (genomic breeding value including the polygenic effect).
@@ -35,12 +43,15 @@ A `NamedTuple` with fields:
 - `bg`: Fixed mean from GBLUP model.
 - `ug`: Vector of polygenic solutions from GBLUP.
 - `ag`: Vector of genomic solutions from GBLUP.
+- `bulls`: The bulls with polygenic, DGV and GEBV of both models added.
 """
 function ex_11_7()
     println("Example 11.7: models with polygenic effects")
 
-    # 1. Load data and setup variance components
-    (; M, dyd, ref, σ²a, σ²e) = data_11()
+    # 1. Bulls (one row per genotyped bull, in the row order of M) and
+    #    variance components
+    (; bulls, M, σ²a, σ²e) = data_11()
+    isref = bulls.set .== "reference"
     Z, p, k = center_genotypes(M)
     σ²u = 0.1 * σ²a                             # 10% residual polygenic variance
     σ²g = σ²a - σ²u                             # 90% genomic variance
@@ -63,9 +74,10 @@ function ex_11_7()
         0.035 0.588 0.023 0.023 0.039 0.337 0.376 0.376 0.036 0.347 0.341 0.348 0.325 1.070
     ]
     Ai = inv(A)
-    W = incidence(ref, 14)
-    y = dyd[ref]
-    X = ones(8, 1)
+    W = incidence(findall(isref), nrow(bulls))  # records → bulls 13–26
+    y = bulls.dyd[isref]
+    X = ones(count(isref), 1)
+    Zr = Z[isref, :]
 
     check(
         "α₁, α₂ (SNP-BLUP), α₂ (GBLUP)",
@@ -74,31 +86,42 @@ function ex_11_7()
         atol = 2e-3,
     )
 
-    # 3. Model 1: SNP-BLUP + Polygenic (Eqn 11.14)
-    ms = mme(y, X, [RandomEffect(W, Ai, σ²u), RandomEffect(Z[ref, :], I, σ²g / k)]; σ²e)
-    bs, (us, gs) = solutions(ms, solve_mme(ms))
-
-    # 4. Model 2: GBLUP + Polygenic (Eqn 11.16)
+    # 3. Both models as T'T + Σ (R = Iσ²e). Each record has a polygenic effect
+    #    (W) and a genomic one: SNP effects through Z (Model 1, Eqn 11.14), or a
+    #    second animal effect through the same W (Model 2, Eqn 11.16).
     G = grm(Matrix{Int8}(M'), p)
-    mg = mme(y, X, [RandomEffect(W, Ai, σ²u), RandomEffect(W, inv(G + 0.01I), σ²g)]; σ²e)
-    bg, (ug, ag) = solutions(mg, solve_mme(mg))
+    Gi = inv(G + 0.01I)
+    O = spzeros(1, 1)
+    fit(T, Σ) = (T'T + Σ) \ (T'y)
+    #    Model 1: SNP-BLUP + polygenic
+    Ts = [X W Zr]
+    Σs = blockdiag(O, sparse(σ²e / σ²u * Ai), sparse(k * σ²e / σ²g * I, 10, 10))
+    ms = mme(y, X, [RandomEffect(W, Ai, σ²u), RandomEffect(Zr, I, σ²g / k)]; σ²e)
+    check("Model 1: mme() LHS = T'T + Σ", ms.lhs, Ts'Ts + Σs; atol = 1e-10)
+    xs = fit(Ts, Σs)
+    bs, us, gs = xs[ms.blocks[1]], xs[ms.blocks[2]], xs[ms.blocks[3]]
+    #    Model 2: GBLUP + polygenic, two animal effects on the same records
+    Tg = [X W W]
+    Σg = blockdiag(O, sparse(σ²e / σ²u * Ai), sparse(σ²e / σ²g * Gi))
+    mg = mme(y, X, [RandomEffect(W, Ai, σ²u), RandomEffect(W, Gi, σ²g)]; σ²e)
+    check("Model 2: mme() LHS = T'T + Σ", mg.lhs, Tg'Tg + Σg; atol = 1e-10)
+    xg = fit(Tg, Σg)
+    bg, ug, ag = xg[mg.blocks[1]], xg[mg.blocks[2]], xg[mg.blocks[3]]
 
-    show_table(
-        bull = 13:26,
-        poly_snp = vec(us),
-        DGV_snp = Z * vec(gs),
-        poly_g = vec(ug),
-        DGV_g = vec(ag),
-    )
+    bulls.poly_snp, bulls.dgv_snp = us, Z * gs
+    bulls.poly_g, bulls.dgv_g = ug, ag
+    bulls.gebv_snp = bulls.dgv_snp + us
+    bulls.gebv_g = ag + ug
+    show_table(bulls)
     check(
         "SNP-BLUP: mean, SNP effects",
-        [bs; vec(gs)],
+        [bs; gs],
         [9.940, 0.078, -0.280, 0.234, -0.075, 0.098, 0.128, 0, 0, -0.054, -0.018],
     )
     check("GBLUP mean", bg, [9.940])
     check(
         "polygenic (both models)",
-        [vec(us) vec(ug)],
+        [us ug],
         repeat(
             [
                 0.011,
@@ -124,7 +147,7 @@ function ex_11_7()
     # Note: Table 11.4 in the book tabulates DGV + polygenic
     check(
         "SNP-BLUP DGV + polygenic",
-        Z * vec(gs) + vec(us),
+        bulls.gebv_snp,
         [
             0.066,
             0.102,
@@ -144,7 +167,7 @@ function ex_11_7()
     )
     check(
         "GBLUP DGV + polygenic",
-        vec(ag) + vec(ug),
+        bulls.gebv_g,
         [
             0.064,
             0.106,
@@ -163,5 +186,5 @@ function ex_11_7()
         ],
     )
 
-    (; bs, us = vec(us), gs = vec(gs), bg, ug = vec(ug), ag = vec(ag))
+    (; bs, us, gs, bg, ug, ag, bulls)
 end

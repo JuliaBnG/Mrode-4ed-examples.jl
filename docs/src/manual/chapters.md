@@ -309,7 +309,10 @@ Markov Chain Monte Carlo (MCMC) Bayesian parameter estimation:
   against `gibbs_sweep!`; BLUP and posterior means are compared in the
   data table.
 - **`ex_18_2` (Section 18.3)**: Multivariate block Gibbs sampler with
-  inverse-Wishart covariance updates for $R$ and $G$.
+  inverse-Wishart covariance updates for $R$ and $G$, on the data table
+  of `ex_06_1`. The conditional distribution used to augment a missing
+  record is computed; BLUP and posterior means are compared in the
+  table, prior and posterior (co)variances in another.
 
 ---
 

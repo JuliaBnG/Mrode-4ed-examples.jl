@@ -35,22 +35,34 @@ y_{i, 2} \\mid y_{i, 1}, \\mathbf{b}, \\mathbf{u}, R_0 \\sim N\\left(\\mu_{2\\mi
 Missing values are sampled at every Gibbs iteration, allowing straightforward
 complete-data matrix updates.
 
+# Tables
+The data are one table, one row per animal, with both traits; BLUP and posterior means
+are added as columns. For the missing record the conditional distribution used for
+data augmentation is computed at the BLUP solutions.
+
 # Returns
-A `NamedTuple` with field `f`: the chain with (co)variances sampled (`GibbsResult`:
+A `NamedTuple` with field `ped` (the data with BLUP and posterior means) and `f`: the chain with (co)variances sampled (`GibbsResult`:
 posterior means of the location parameters, ``R_0`` and ``G_0``, and the variance samples).
 """
 function ex_18_2()
     println("Example 18.2: multivariate Gibbs sampling")
 
-    # Step 1: Pedigree and bivariate phenotype data
-    ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 4, 3], dam = [0, 0, 0, 0, 2, 2, 5, 6])
-    calf = 4:8
-    sex = ["M", "F", "F", "M", "M"]
-    Y = [4.5 6.8; 2.9 5.0; 3.9 6.8; 3.5 6.0; 5.0 7.5]
+    # Step 1: Pedigree and both traits of Example 6.1, one row per animal
+    no3 = fill(missing, 3)
+    ped = DataFrame(
+        calf = 1:8,
+        sex = [no3; ["M", "F", "F", "M", "M"]],
+        sire = [0, 0, 0, 1, 3, 1, 4, 3],
+        dam = [0, 0, 0, 0, 2, 2, 5, 6],
+        wwg = [no3; [4.5, 2.9, 3.9, 3.5, 5.0]],
+        pwg = [no3; [6.8, 5.0, 6.8, 6.0, 7.5]],
+    )
+    rec = dropmissing(ped, [:wwg, :pwg])
+    Y = Matrix(rec[:, [:wwg, :pwg]])
     G0 = [20.0 18; 18 40]
     R0 = [40.0 11; 11 30]
-    X, _ = incidence(sex; levels = ["M", "F"])
-    Z = incidence(calf, 8)
+    X, _ = incidence(rec.sex; levels = ["M", "F"])
+    Z = incidence(rec.calf, nrow(ped))
     Ai = ainv(ped)
 
     # Step 2: Multi-trait BLUP of Example 6.1 for analytical reference
@@ -81,7 +93,11 @@ function ex_18_2()
             ).x for c = 1:8
         ],
     )
-    mc_check("posterior means vs BLUP", chains(Y, 100), vec([reshape(b, 2, 2); u]))
+    pm = chains(Y, 100)
+    mc_check("posterior means vs BLUP", pm, vec([reshape(b, 2, 2); u]))
+    ped.blup_wwg, ped.blup_pwg = u[:, 1], u[:, 2]
+    pu = reshape(vec(mean(pm; dims = 2)), :, 2)[3:end, :]
+    ped.post_wwg, ped.post_pwg = pu[:, 1], pu[:, 2]
 
     # Step 4: Missing PWG record (Example 6.2 pattern) handled via data augmentation
     Ym = Matrix{Union{Missing,Float64}}(Y)
@@ -94,13 +110,26 @@ function ex_18_2()
         Rinv = mt_rinv(R0, obs2),
     )
     b2, (u2,) = solutions(m2, solve_mme(m2))
+    #    In every round the missing PWG of calf 4 is drawn from its distribution
+    #    given its WWG record: mean x'b₂ + u₂ + (r₁₂/r₁₁)(y₁ - x'b₁ - u₁), variance
+    #    r₂₂ - r₁₂²/r₁₁; at the BLUP solutions:
+    B2 = reshape(b2, 2, 2)
+    η = X[1, :]' * B2 .+ u2[4, :]'               # expected WWG, PWG of calf 4
+    μ21 = η[2] + R0[1, 2] / R0[1, 1] * (Y[1, 1] - η[1])
+    @printf(
+        "  calf 4, missing PWG: N(%.3f, %.3f) given WWG = %.1f\n",
+        μ21,
+        R0[2, 2] - R0[1, 2]^2 / R0[1, 1],
+        Y[1, 1]
+    )
     mc_check(
         "missing record: posterior means vs BLUP",
         chains(Ym, 200),
         vec([reshape(b2, 2, 2); u2]),
     )
 
-    # Step 5: (Co)variances sampled with proper inverse-Wishart priors centred on R0, G0
+    # Step 5: (Co)variances sampled with proper inverse-Wishart priors with means R0, G0
+    #         (V/(ν - t - 1) with V = R0(ν - 3), t = 2 traits)
     ν = 10
     f = gibbs_mt(
         Y,
@@ -119,7 +148,10 @@ function ex_18_2()
     )
     show_table(
         parameter = ["r11", "r21", "r22", "g11", "g21", "g22"],
+        prior_mean = [R0[1, 1], R0[2, 1], R0[2, 2], G0[1, 1], G0[2, 1], G0[2, 2]],
         posterior_mean = vec(mean(f.samples; dims = 2)),
     )
-    (; f)
+    println("\nBLUP and posterior means (variances fixed) of both traits:")
+    show_table(ped)
+    (; f, ped)
 end

@@ -84,7 +84,11 @@ Simultaneous genetic evaluation of multiple genetically correlated traits:
   against `mt_stack`, `mt_blocks` and `mt_rinv`. Computes the
   multi-trait DYD of sire 1 (Section 6.4.2).
 - **`ex_06_4` (Section 6.5.1)**: Multivariate analysis with zero
-  residual covariance (e.g. traits measured on different animals).
+  residual covariance: yearling weight on males and fat yield on
+  females, on one data table. The MME are written out as in the book;
+  the traits are linked only through the $A^{-1} g^{12}$ blocks of
+  $G_0^{-1} \otimes A^{-1}$. Checked against `mt_stack`, `mt_blocks`
+  and `mt_rinv`.
 - **`ex_06_5` (Section 6.5.2)**: Multi-trait across-country evaluation
   (MACE) of bulls with a sire–maternal-grandsire model and phantom
   groups, and the partition of MACE proofs.

@@ -25,12 +25,13 @@ end
     show_table(df::DataFrame; digits = 3)
 
 Print named columns, or a DataFrame, as a rounded table. Floating-point
-columns, including those with `missing` values, are rounded.
+columns, including those with `missing` values, are rounded (and `-0.0`
+shown as `0.0`).
 """
 show_table(; digits = 3, cols...) = show_table(DataFrame([k => v for (k, v) in cols]); digits)
 
 show_table(df::DataFrame; digits = 3) = println(
-    mapcols(c -> nonmissingtype(eltype(c)) <: AbstractFloat ? round.(c; digits) : c, df),
+    mapcols(c -> nonmissingtype(eltype(c)) <: AbstractFloat ? round.(c; digits) .+ 0.0 : c, df),
 )
 
 """

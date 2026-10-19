@@ -164,7 +164,10 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
   $\mathrm{diag}(\mathrm{EDC}/\sigma^2_e)$) and is checked against `mme`;
   DGV, polygenic effects and GEBV are added to a table of bulls.
 - **`ex_11_2` (Section 11.4.1)**: Ridge regression BLUP / SNP-BLUP
-  estimating individual SNP allele substitution effects.
+  estimating individual SNP allele substitution effects, unweighted and
+  EDC-weighted. The general-form MME are written out and checked
+  against `mme`; SNP effects go into a table of SNPs, DGV into the bull
+  table. SNPs monomorphic in the reference get exactly zero effects.
 - **`ex_11_3` (Sections 11.4.2–11.4.5 and 11.9)**: Genomic BLUP (GBLUP)
   using VanRaden's first genomic relationship matrix ($G$), back-solving
   marker effects from GEBVs, selection index, and genomic reliabilities.

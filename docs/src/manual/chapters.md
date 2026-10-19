@@ -31,7 +31,13 @@ Covers basic linear mixed model equations (MME) for single-trait evaluations:
   $[X'R^{-1}X\ X'R^{-1}W;\ W'R^{-1}X\ W'R^{-1}W + A_p^{-1}/\sigma^2_a]$.
   Non-parents are back-solved explicitly (Eqn 4.26), and the solutions
   equal those of the full animal model with 8 instead of 10 equations.
-- **`ex_04_4` (Section 4.6)**: Animal model incorporating genetic groups / unknown parent groups (UPG) using the $QP$ formulation.
+- **`ex_04_4` (Section 4.6)**: Animal model with unknown parent groups
+  (UPG) on the data table of `ex_04_1`, with unknown parents replaced by
+  negative group codes. $A^{*-1}$ is built from its blocks
+  $[A^{-1}\ -A^{-1}Q;\ -Q'A^{-1}\ Q'A^{-1}Q]$ and checked against
+  `ainv_upg`; the QP-transformed MME are written out and checked
+  against `mme`, and $\hat{a}^* = \hat{a} + Q\hat{g}$ is confirmed with
+  the explicit group model.
 
 ---
 

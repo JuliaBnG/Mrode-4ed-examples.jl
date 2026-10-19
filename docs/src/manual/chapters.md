@@ -199,8 +199,10 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
   - **BayesB**: Point mass mixture prior (variable selection with locus-specific variances).
   - **BayesC**: Point mass mixture prior with a common genetic variance.
   - **BayesC$\pi$**: Joint sampling of marker inclusion probability $\pi$.
-- **`ex_11_13` (Section 11.8)**: Multivariate GBLUP for multi-trait
-  genomic predictions.
+- **`ex_11_13` (Section 11.8)**: Multivariate GBLUP of the calves of
+  `ex_06_1`: the Kronecker MME of `ex_06_1` with $Z = I$ and $G$ in
+  place of $A$, written out and checked against `mme`; DGV are compared
+  with the pedigree-based EBV of `ex_06_1` in a table of calves.
 
 ---
 

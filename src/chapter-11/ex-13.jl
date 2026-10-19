@@ -21,10 +21,19 @@ where:
 - Residual errors have covariance ``\\mathrm{var}(e) = R_0 \\otimes I`` with
   ``R_0 = \\begin{bmatrix} 40.0 & 11.0 \\\\ 11.0 & 30.0 \\end{bmatrix}``.
 
+# Key Concepts Illustrated
+1. **Same MME as Example 6.1**, with ``Z = I`` and ``G`` in place of ``A``:
+   ``[R_0^{-1} \\otimes X'X\\ R_0^{-1} \\otimes X';\\ R_0^{-1} \\otimes X\\
+   R_0^{-1} \\otimes I + G_0^{-1} \\otimes G^{-1}]``, written out with `kron` and
+   compared with `mme`.
+2. **Tables**: the calves with both traits; their DGV and, for comparison, the
+   pedigree-based multi-trait EBV of Example 6.1 are added as columns.
+
 # Returns
 A `NamedTuple` with fields:
 - `b`: Fixed sex effects for WWG and PWG.
 - `a`: Direct genomic values (DGVs) for calves 4 to 8 for both traits.
+- `calves`: The calves with DGV and pedigree-based EBV of both traits.
 """
 function ex_11_13()
     println("Example 11.13: multivariate genomic model")
@@ -37,8 +46,13 @@ function ex_11_13()
         1 2 2 1 0 1 1 1 2 1
         1 1 1 1 1 0 1 1 2 0
     ]
-    sex = ["M", "F", "F", "M", "M"]
-    Y = [4.5 6.8; 2.9 5.0; 3.9 6.8; 3.5 6.0; 5.0 7.5]
+    calves = DataFrame(
+        calf = 4:8,
+        sex = ["M", "F", "F", "M", "M"],
+        wwg = [4.5, 2.9, 3.9, 3.5, 5.0],
+        pwg = [6.8, 5.0, 6.8, 6.0, 7.5],
+    )
+    Y = Matrix(calves[:, [:wwg, :pwg]])
 
     # 2. Covariance matrices
     G0 = [20.0 18.0; 18.0 40.0]
@@ -60,20 +74,46 @@ function ex_11_13()
         ],
     )
 
-    # 4. Multi-trait GBLUP MME setup
-    X, _ = incidence(sex; levels = ["M", "F"])
+    # 4. Multi-trait GBLUP MME, written out as in Example 6.1 with Z = I (each
+    #    calf has its own record) and G in place of A:
+    #    [R₀⁻¹⊗X'X R₀⁻¹⊗X'; R₀⁻¹⊗X R₀⁻¹⊗I + G₀⁻¹⊗G⁻¹]
+    X, _ = incidence(calves.sex; levels = ["M", "F"])
+    Gi = inv(G + 0.01I)
+    Ri = inv(R0)
+    n = nrow(calves)
+    lhs = [
+        kron(Ri, X'X)  kron(Ri, X')
+        kron(Ri, X)    kron(Ri, I(n)) + kron(inv(G0), Gi)
+    ]
+    rhs = [kron(Ri, X'); kron(Ri, I(n))] * vec(Y)
     y, obs = mt_stack(Y)
     m = mme(
         y,
         reduce(hcat, mt_blocks(obs, [X, X])),
-        [RandomEffect(mt_blocks(obs, [I(5), I(5)]), inv(G + 0.01I), G0)];
+        [RandomEffect(mt_blocks(obs, [I(n), I(n)]), Gi, G0)];
         Rinv = mt_rinv(R0, obs),
     )
+    check("mme() LHS = Kronecker form", m.lhs, lhs; atol = 1e-10)
 
     # 5. Solve MME
-    b, (a,) = solutions(m, solve_mme(m))
+    x = lhs \ rhs
+    b = x[m.blocks[1]]
+    a = reshape(x[m.blocks[2]], :, 2)
+    calves.dgv_wwg, calves.dgv_pwg = a[:, 1], a[:, 2]
 
-    show_table(calf = 4:8, WWG = a[:, 1], PWG = a[:, 2])
+    # 6. For comparison: pedigree-based multi-trait BLUP of Example 6.1 (same
+    #    records, A of the 8-animal pedigree), EBV of calves 4–8
+    ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 4, 3], dam = [0, 0, 0, 0, 2, 2, 5, 6])
+    Z = incidence(calves.calf, nrow(ped))
+    xa = [
+        kron(Ri, X'X)  kron(Ri, X'Z)
+        kron(Ri, Z'X)  kron(Ri, Z'Z) + kron(inv(G0), ainv(ped))
+    ] \ ([kron(Ri, X'); kron(Ri, Z')] * vec(Y))
+    ea = reshape(xa[5:end], :, 2)[calves.calf, :]
+    calves.ebv_wwg, calves.ebv_pwg = ea[:, 1], ea[:, 2]
+    check("pedigree EBV = Example 6.1 (WWG, calves 4–8)", ea[:, 1], [-0.010, -0.270, 0.276, -0.316, 0.244])
+    println("\nCalves: genomic (DGV) and pedigree-based (EBV, Example 6.1) values:")
+    show_table(calves)
     check("sex (WWG, PWG)", b, [4.323, 3.416, 6.753, 5.921])
     check(
         "calves 4–8",
@@ -87,5 +127,5 @@ function ex_11_13()
         ],
     )
 
-    (; b, a)
+    (; b, a, calves)
 end

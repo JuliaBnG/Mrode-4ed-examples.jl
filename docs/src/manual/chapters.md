@@ -177,7 +177,10 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
   the singular $G$).
 - **`ex_11_6` (Section 11.4.6)**: Base-population allele frequencies and
   gene content of ungenotyped ancestors by the linear method of Gengler
-  et al. (2007), compared with the GLS estimator.
+  et al. (2007), compared with the GLS estimator. Every SNP is a trait
+  with the same MME, solved for all SNPs at once with a matrix
+  right-hand side; predicted gene content is added to the pedigree and
+  imputed genotypes are shown for the ungenotyped ancestors.
 - **`ex_11_7` (Section 11.5)**: SNP-BLUP and GBLUP with a residual
   polygenic effect $u \sim N(0, A\sigma^2_u)$ (10 % of $\sigma^2_a$),
   fitted as a separate random effect.

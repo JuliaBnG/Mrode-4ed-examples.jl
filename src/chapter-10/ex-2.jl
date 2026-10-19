@@ -20,14 +20,20 @@ where:
 - Residual variance: ``\\sigma_e^2 = 3.710``.
 
 # Key Concepts Illustrated
-1. **Random Regression Design Matrices**: Constructed with diagonal covariable weights
-   `Diagonal(ϕ[:, c]) * Z`.
-2. **305-Day Breeding Values and PE**: Summed across lactation days:
+1. **Tables**: the test-day records of Example 10.1, one row per test day;
+   regression coefficients, 305-day values and reliabilities are added as
+   columns of the pedigree.
+2. **Random Regression Design Matrices**: Constructed with diagonal covariable weights
+   `Diagonal(ϕ[:, c]) * Z`. The MME are those of Example 10.1, ``T'T + \\Sigma``,
+   with ``Z_{RR} = [\\mathrm{Diag}(\\phi_0)Z\\ \\mathrm{Diag}(\\phi_1)Z\\
+   \\mathrm{Diag}(\\phi_2)Z]`` in place of ``Z`` and ``\\sigma_e^2 G^{-1} \\otimes A^{-1}``
+   in place of ``\\lambda_a A^{-1}`` (likewise for pe); compared with `mme`.
+3. **305-Day Breeding Values and PE**: Summed across lactation days:
    ``t = \\sum_{d=6}^{310} \\phi(d)``, with ``\\mathrm{EBV}_{305} = u t``.
-3. **Reliability of Linear Functions of Random Regressions** (Section 10.3.4):
+4. **Reliability of Linear Functions of Random Regressions** (Section 10.3.4):
    For evaluation ``k' u`` with ``k = t``:
    ``\\mathrm{rel} = 1 - \\frac{t' C^{ii} t}{t' G t}``.
-4. **Decomposition of Random Regressions** (Section 10.3.2):
+5. **Decomposition of Random Regressions** (Section 10.3.2):
    Multi-trait partition into PA, YD, and PC across Legendre coefficients.
 
 # Notes on Text Discrepancies
@@ -38,6 +44,8 @@ where:
 
 # Returns
 A `NamedTuple` with fields:
+- `ped`: The pedigree with columns `u0`, `u1`, `u2`, `bv305`, `pe305` and `rel` added.
+- `rec`: The test-day records with the corrected yields `yc` added.
 - `b`: Fixed effect solutions (HTD and curve).
 - `u`: Animal random regression coefficients (8 × 3).
 - `pe`: Permanent environmental random regression coefficients (5 × 3).
@@ -46,32 +54,54 @@ A `NamedTuple` with fields:
 function ex_10_2()
     println("Example 10.2: random regression model")
 
-    # 1. Load data and setup covariance matrices
-    (; ped, dims, cow, dim, htd, y, Φ) = data_10()
+    # 1. Test-day records (one row per test day), pedigree, Legendre polynomials,
+    #    and the covariance matrices of the random regression coefficients
+    (; ped, rec, Φ) = data_10()
     G = [3.297 0.594 -1.381; 0.594 0.921 -0.289; -1.381 -0.289 1.005]
     P = [6.872 -0.254 -1.101; -0.254 3.171 0.167; -1.101 0.167 2.457]
     σ²e = 3.710
     N = nrow(ped)
+    Ai = ainv(ped)
 
-    # 2. Design matrices for fixed effects and random regressions
-    X1, _ = incidence(htd)
-    X2 = Φ[dim, :]
-    Z = incidence(cow, N)
-    Q, cows = incidence(cow)
-    ϕ = Φ[dim, 1:3]                       # order-2 Legendre covariables for random effects
+    # 2. Design matrices. Fixed effects as in Example 10.1; for the random
+    #    regressions, record i gets the covariables ϕ(dᵢ) of its DIM in the
+    #    columns of its cow: Z_RR = [Diag(ϕ₀)Z Diag(ϕ₁)Z Diag(ϕ₂)Z]
+    y = rec.tdy
+    X1, _ = incidence(rec.htd)
+    X2 = Φ[rec.dim, :]
+    Z = incidence(rec.cow, N)
+    Q, cows = incidence(rec.cow)
+    ϕ = Φ[rec.dim, 1:3]                   # order-2 Legendre covariables for random effects
+    ZR = reduce(hcat, [Diagonal(ϕ[:, c]) * Z for c = 1:3])
+    QR = reduce(hcat, [Diagonal(ϕ[:, c]) * Q for c = 1:3])
+
+    # 3. MME (R = Iσ²e) as in Example 10.1, T'T + Σ, with T = [X₁ X₂ Z_RR Q_RR]
+    #    and the scalar ratios replaced by σ²e G⁻¹ ⊗ A⁻¹ and σ²e P⁻¹ ⊗ I
+    T = [X1 X2 ZR QR]
+    nb = size(X1, 2) + size(X2, 2)
+    Σ = blockdiag(
+        spzeros(nb, nb),
+        sparse(kron(σ²e * inv(G), Ai)),
+        sparse(kron(σ²e * inv(P), I(length(cows)))),
+    )
+    lhs = T'T + Σ
+    rhs = T'y
     m = mme(
         y,
         [X1 X2],
         [
-            RandomEffect([Diagonal(ϕ[:, c]) * Z for c = 1:3], ainv(ped), G),
+            RandomEffect([Diagonal(ϕ[:, c]) * Z for c = 1:3], Ai, G),
             RandomEffect([Diagonal(ϕ[:, c]) * Q for c = 1:3], I, P),
         ];
         σ²e,
     )
+    check("mme() LHS = T'T + Σ", m.lhs, lhs; atol = 1e-12)
 
-    # 3. Solve MME (HTD 10 set to zero)
-    x = solve_mme(m; zero = [10])
-    b, (u, pe) = solutions(m, x)
+    # 4. Solve MME (HTD 10 set to zero)
+    x = solve_mme(lhs, rhs; zero = [10])
+    b = x[m.blocks[1]]
+    u = reshape(x[m.blocks[2]], :, 3)     # animals × (ϕ₀, ϕ₁, ϕ₂)
+    pe = reshape(x[m.blocks[3]], :, 3)    # cows × (ϕ₀, ϕ₁, ϕ₂)
 
     t106, t140 = legendre([106, 140], 3; tmin = 4, tmax = 310) |> eachrow
     check(
@@ -120,10 +150,13 @@ function ex_10_2()
         atol = 1e-4,
     )
 
-    # 4. 305-day cumulative breeding values: t = Σ_{d=6}^{310} φ(d)
+    # 5. 305-day cumulative breeding values: t = Σ_{d=6}^{310} φ(d)
     t = vec(sum(legendre(6:310, 3; tmin = 4, tmax = 310); dims = 1))
     check("t (days 6–310)", t, [215.6655, 2.4414, -1.5561]; atol = 0.012)
-    show_table(animal = 1:N, BV305 = u * t)
+    ped.u0, ped.u1, ped.u2 = eachcol(u)
+    ped.bv305 = u * t
+    ped.pe305 = Vector{Union{Missing,Float64}}(missing, N)
+    ped.pe305[cows] = pe * t
     check(
         "305-day breeding values",
         u * t,
@@ -137,11 +170,12 @@ function ex_10_2()
         atol = 0.03,
     )
 
-    # 5. Reliability of 305-day breeding values k'u (k = t): PEV = t' Cⁱⁱ t (Section 10.3.4)
+    # 6. Reliability of 305-day breeding values k'u (k = t): PEV = t' Cⁱⁱ t (Section 10.3.4)
     C = lhs_inverse(m; zero = [10]) * m.scale
     r = m.blocks[2]
     g = t' * G * t
     rel = [1 - (idx = r[(0:2) .* N .+ i]; t' * C[idx, idx] * t) / g for i = 1:N]
+    ped.rel = rel
     check("k'Gk", g, 154896.766; atol = 25)
     @printf("  k'Pk = %.1f\n", t' * P * t)
     check(
@@ -151,14 +185,16 @@ function ex_10_2()
         atol = 0.005,
     )
 
-    # 6. Partition of random regression coefficients (Section 10.3.2)
-    yc = y - [X1 X2] * b - sum(Diagonal(ϕ[:, c]) * Q * pe[:, c] for c = 1:3)
+    # 7. Partition of random regression coefficients (Section 10.3.2): records
+    #    corrected for HTD, curve and pe, and per cow the least-squares
+    #    regression of the corrected records on ϕ (the YD of the coefficients)
+    rec.yc = y - [X1 X2] * b - QR * vec(pe)
     ZRZ = [zeros(3, 3) for _ = 1:N]
     yd = zeros(N, 3)
-    for i in cows
-        k = cow .== i
-        ZRZ[i] = ϕ[k, :]' * ϕ[k, :] / σ²e
-        yd[i, :] = (ϕ[k, :]' * ϕ[k, :]) \ (ϕ[k, :]' * yc[k])
+    for g in groupby(rec, :cow)
+        i, ϕg = g.cow[1], Φ[g.dim, 1:3]
+        ZRZ[i] = ϕg'ϕg / σ²e
+        yd[i, :] = (ϕg'ϕg) \ (ϕg' * g.yc)
     end
     p = ebv_partition_mt(ped.sire, ped.dam, G, ZRZ, yd, u)
 
@@ -181,5 +217,8 @@ function ex_10_2()
         atol = 1e-10,
     )
 
-    (; b, u, pe, rel)
+    println("\nPedigree with random regression coefficients, 305-day values and reliabilities:")
+    show_table(ped; digits = 4)
+
+    (; ped, rec, b, u, pe, rel)
 end

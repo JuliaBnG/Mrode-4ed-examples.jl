@@ -139,8 +139,11 @@ Models continuous longitudinal or trajectory traits (e.g. test-day milk yields):
   the MME are written as $T'T + \Sigma$ and checked against `mme`.
 - **`ex_10_2` (Section 10.3)**: Random regression test-day model using
   orthogonal Legendre polynomials for animal genetic and permanent
-  environmental trajectories. Calculation of 305-day cumulative
-  lactation breeding values and reliabilities.
+  environmental trajectories. The MME are those of `ex_10_1` with
+  $Z_{RR} = [\mathrm{Diag}(\phi_0)Z\ \mathrm{Diag}(\phi_1)Z\
+  \mathrm{Diag}(\phi_2)Z]$ and $\sigma^2_e G^{-1} \otimes A^{-1}$, checked
+  against `mme`. Calculation of 305-day cumulative lactation breeding
+  values and reliabilities, added as columns of the pedigree.
 - **`ex_10_3` (Sections 10.4 and 10.3.5)**: Random regression using
   linear splines and covariance functions.
 

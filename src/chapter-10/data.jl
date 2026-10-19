@@ -8,7 +8,7 @@ one row per test day (cow, DIM, HTD, TDY, and `dim`, the index of the DIM
 in `dims`); they are typed as in the book, one column per cow, and stacked.
 `ped` is the pedigree of Example 5.1 (IDs are row numbers), `Φ` the matrix
 of normalized Legendre polynomials at the ten DIM (standardized over days
-4–310). `cow`, `dim`, `htd` and `y` are the columns of `rec` as vectors.
+4–310).
 """
 function data_10()
     ped = DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
@@ -41,14 +41,5 @@ function data_10()
     sort!(rec, [:cow, :DIM])
     select!(rec, :cow, :DIM, :dim, :htd, :tdy)
 
-    (;
-        ped,
-        rec,
-        dims,
-        cow = rec.cow,
-        dim = rec.dim,
-        htd = rec.htd,
-        y = rec.tdy,
-        Φ = legendre(dims, 5),
-    )
+    (; ped, rec, dims, Φ = legendre(dims, 5))
 end

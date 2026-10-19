@@ -230,7 +230,9 @@ Partitioning non-additive genetic variation for commercial crossing and mating a
 - **`ex_13_1`–`ex_13_2` (Sections 13.2–13.3)**: Pedigree-based dominance
   relationship matrix ($D$), built by Cockerham's rule and checked
   against `drm`, and dominance BLUP with the MME written as $T'T +
-  \Sigma$, $T = [X\ Z\ Z]$, on one data table.
+  \Sigma$, $T = [X\ Z\ Z]$, on one data table; total genetic merit $g =
+  a + d$ with $V = A\sigma^2_a + D\sigma^2_d$, its MME written out, and
+  $\hat{a}$, $\hat{d}$ recovered from $\hat{g}$.
 - **`ex_13_3` (Section 13.4)**: Genomic dominance relationship matrices
   and estimation of genomic inbreeding depression.
 - **`ex_13_5` (Section 13.5)**: Additive-by-additive ($A \odot A$ or $G \odot G$) epistatic relationship models.

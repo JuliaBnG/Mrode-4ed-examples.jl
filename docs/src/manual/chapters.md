@@ -24,7 +24,13 @@ Covers basic linear mixed model equations (MME) for single-trait evaluations:
   are written out and checked against `mme`. Sire solutions are shown
   next to $\frac{1}{2}\hat{a}$ of the animal model: $s = \frac{1}{2}a$,
   but here the estimates even rank the sires differently.
-- **`ex_04_3` (Section 4.5)**: Reduced Animal Model (RAM), absorbing non-parent equations to reduce system dimensionality.
+- **`ex_04_3` (Section 4.5)**: Reduced Animal Model (RAM) on the data
+  table of `ex_04_1`. Records of non-parents carry their Mendelian
+  sampling in the residual, so $R \ne I\sigma^2_e$ and the MME are
+  written out in the general form
+  $[X'R^{-1}X\ X'R^{-1}W;\ W'R^{-1}X\ W'R^{-1}W + A_p^{-1}/\sigma^2_a]$.
+  Non-parents are back-solved explicitly (Eqn 4.26), and the solutions
+  equal those of the full animal model with 8 instead of 10 equations.
 - **`ex_04_4` (Section 4.6)**: Animal model incorporating genetic groups / unknown parent groups (UPG) using the $QP$ formulation.
 
 ---

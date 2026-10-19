@@ -44,7 +44,14 @@ Covers basic linear mixed model equations (MME) for single-trait evaluations:
 ## Chapter 5: Models for Repeated Records
 
 Extends the mixed model to traits recorded multiple times across an animal's lifetime:
-- **`ex_05_1` (Section 5.1)**: Univariate repeatability animal model with permanent environmental effects ($pe$). Computes repeatability $r$, daughter yield deviations ($\mathrm{DYD}$), and sire evaluations.
+- **`ex_05_1` (Section 5.1)**: Univariate repeatability animal model
+  with permanent environmental effects ($pe$). Uses two tables, the
+  pedigree (one row per animal) and the records (one row per
+  lactation); yield deviations come from `groupby`/`combine` and are
+  joined onto the pedigree. The MME with $\lambda_a A^{-1}$ and
+  $\lambda_{pe} I$ are written out and checked against `mme`, and the
+  rank deficiency of $X$ explains the two constraints. Computes
+  daughter yield deviations ($\mathrm{DYD}$) and the partition of EBV.
 - **`ex_05_2` (Section 5.2)**: Common environmental effect ($c^2$) shared by full-sibs or littermates.
 
 ---

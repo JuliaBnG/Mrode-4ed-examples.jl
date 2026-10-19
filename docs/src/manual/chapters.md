@@ -52,7 +52,11 @@ Extends the mixed model to traits recorded multiple times across an animal's lif
   $\lambda_{pe} I$ are written out and checked against `mme`, and the
   rank deficiency of $X$ explains the two constraints. Computes
   daughter yield deviations ($\mathrm{DYD}$) and the partition of EBV.
-- **`ex_05_2` (Section 5.2)**: Common environmental effect ($c^2$) shared by full-sibs or littermates.
+- **`ex_05_2` (Section 5.3)**: Common environmental effect ($c^2$)
+  shared by full-sibs or littermates, on one data table with a litter
+  column. The MME with $\lambda_a A^{-1}$ and $\lambda_c I$ are written
+  out and checked against `mme`; litter solutions are kept in a table
+  of litters and joined back onto the piglets.
 
 ---
 

@@ -239,7 +239,11 @@ Partitioning non-additive genetic variation for commercial crossing and mating a
   coding and checked against `grm`; the MME, $T'T + \Sigma$ with $T =
   [X\ Z\ Z]$, are checked against `mme`, and all solutions are columns
   of the pig table.
-- **`ex_13_5` (Section 13.5)**: Additive-by-additive ($A \odot A$ or $G \odot G$) epistatic relationship models.
+- **`ex_13_5` (Section 13.5)**: Additive-by-additive ($A \odot A$ or $G
+  \odot G$) epistatic relationship models. $G_{AA}$ is written as the
+  scaled Hadamard product `G .* G` and checked against `epistatic_grm`;
+  the MME, $T'T + \Sigma$ with $T = [X\ Z\ Z\ Z]$, are checked against
+  `mme`.
 
 ---
 

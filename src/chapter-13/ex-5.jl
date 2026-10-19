@@ -20,18 +20,26 @@ where:
   ```
   built with `epistatic_grm(G)`.
 
+# Key Concepts Illustrated
+1. **``G_{AA}`` written out** as the Hadamard product `G .* G` scaled to a mean
+   diagonal of 1, compared with `epistatic_grm`.
+2. **MME** as ``T'T + \\Sigma``, ``T = [X\\ Z\\ Z\\ Z]``, compared with `mme`; additive,
+   dominance, epistatic and total genetic values as columns of the pig table.
+
 # Returns
 A `NamedTuple` with fields:
 - `b`: Fixed pen solutions.
 - `a`: Additive genomic solutions for all 15 pigs.
 - `d`: Dominance genomic solutions for all 15 pigs.
 - `aa`: Additive × additive epistatic genomic solutions for all 15 pigs.
+- `pigs`: The pigs with `a`, `d`, `aa` and `total` added.
 """
 function ex_13_5()
     println("Example 13.5: additive × additive epistasis")
 
-    # 1. Load data and setup variance components
-    (; M, pig, pen, ww, σ²a, σ²d, σ²e) = data_13_3()
+    # 1. Genotypes, pigs (one row per pig, in the row order of M) and variances
+    (; M, pigs, σ²a, σ²d, σ²e) = data_13_3()
+    rec = dropmissing(pigs, :ww)
     σ²aa = 6.0
 
     # 2. Construct relationship matrices: G, D, and epistatic GAA = G ⊙ G (normalized)
@@ -39,6 +47,10 @@ function ex_13_5()
     G = grm(Matrix{Int8}(M'), p)
     D = grm(Matrix{Int8}(M'), p; method = :dominance)
     GAA = epistatic_grm(G)
+    #    written out: the elementwise (Hadamard) product G .* G, scaled to a mean
+    #    diagonal of 1
+    GG = G .* G
+    check("G_AA = (G ⊙ G) / (tr(G ⊙ G)/n)", GAA, GG / (tr(GG) / size(G, 1)); atol = 1e-12)
 
     check(
         "G_AA, last row",
@@ -62,24 +74,24 @@ function ex_13_5()
         ],
     )
 
-    # 3. Setup MME with additive, dominance, and epistatic random effects
-    X, _ = incidence(pen)
-    Z = incidence(pig, 15)
-    m = mme(
-        ww,
-        X,
-        [
-            RandomEffect(Z, inv(G + 0.01I), σ²a),
-            RandomEffect(Z, inv(D + 0.01I), σ²d),
-            RandomEffect(Z, inv(GAA + 0.01I), σ²aa),
-        ];
-        σ²e,
-    )
+    # 3. MME (R = Iσ²e) as T'T + Σ: the same Z for the three genetic effects,
+    #    T = [X Z Z Z], and Σ holding λ K⁻¹ for K = G, D, G_AA
+    y = rec.ww
+    X, _ = incidence(rec.pen)
+    Z = incidence(rec.pig, nrow(pigs))
+    Ks = ((G, σ²a), (D, σ²d), (GAA, σ²aa))
+    Kis = [inv(K + 0.01I) for (K, _) in Ks]
+    T = [X Z Z Z]
+    Σ = blockdiag(spzeros(2, 2), (sparse(σ²e / σ² * Ki) for (Ki, (_, σ²)) in zip(Kis, Ks))...)
+    m = mme(y, X, [RandomEffect(Z, Ki, σ²) for (Ki, (_, σ²)) in zip(Kis, Ks)]; σ²e)
+    check("mme() LHS = T'T + Σ", m.lhs, T'T + Σ; atol = 1e-10)
 
     # 4. Solve MME
-    b, (a, d, aa) = solutions(m, solve_mme(m))
-
-    show_table(animal = 1:15, additive = vec(a), dominance = vec(d), epistatic = vec(aa))
+    x = (T'T + Σ) \ (T'y)
+    b, a, d, aa = (x[r] for r in m.blocks)
+    pigs.a, pigs.d, pigs.aa = a, d, aa
+    pigs.total = a + d + aa                     # total genetic value
+    show_table(pigs)
     check("pen", b, [17.453, 20.833])
     check(
         "additive",
@@ -145,5 +157,5 @@ function ex_13_5()
         ],
     )
 
-    (; b, a = vec(a), d = vec(d), aa = vec(aa))
+    (; b, a, d, aa, pigs)
 end

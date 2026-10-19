@@ -25,8 +25,7 @@ end
 
 Genotypes (15 pigs, 20 SNPs), management pens, and weaning weights (records on pigs 5–15)
 used in Examples 13.3–13.5 for genomic additive, dominance, and epistatic models.
-`pigs` has one row per pig (in the row order of `M`; pigs 1–4 have no records); `pig`,
-`pen` and `ww` are the records as vectors.
+`pigs` has one row per pig (in the row order of `M`; pigs 1–4 have no records).
 """
 function data_13_3()
     M = [
@@ -52,13 +51,9 @@ function data_13_3()
         pen = [no4; [1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 2]],
         ww = [no4; [17.0, 20.0, 18.0, 13.5, 20.0, 15.0, 25.0, 19.5, 22.5, 16.0, 24.5]],
     )
-    rec = dropmissing(pigs, :ww)
     (;
         M,
         pigs,
-        pig = rec.pig,
-        pen = rec.pen,
-        ww = rec.ww,
         σ²a = 90.0,
         σ²d = 80.0,
         σ²e = 120.0,

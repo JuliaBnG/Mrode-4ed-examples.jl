@@ -77,23 +77,36 @@ For the animal model ``\\mathbf{y} = X\\mathbf{b} + Z\\mathbf{a} + \\mathbf{e}``
 -  **Full Chain**: Samples location and dispersion parameters with proper
   inverse-``\\chi^2`` priors.
 
+# Written Out
+Round 1 is computed with an explicit loop of single-site updates and compared with
+`gibbs_sweep!`. The data are one table, one row per animal; BLUP and the posterior
+means of both chains are added as columns.
+
 # Returns
 A `NamedTuple` with fields:
 - `x`: Location parameters after round 1 with the book's random numbers.
 - `means`: Posterior means with variances fixed (one column per independent chain).
 - `f`: Full Gibbs chain (`GibbsResult`: posterior means and variance samples).
+- `ped`: The data with `blup`, `gibbs_fixed` and `gibbs_full` added.
 """
 function ex_18_1()
     println("Example 18.1: Gibbs sampling, univariate animal model")
 
-    # Step 1: Pedigree and phenotype data
-    ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 4, 3], dam = [0, 0, 0, 0, 2, 2, 5, 6])
-    calf = 4:8
-    sex = ["M", "F", "F", "M", "M"]
-    y = [4.5, 2.9, 3.9, 3.5, 5.0]
-    X, _ = incidence(sex; levels = ["M", "F"])
+    # Step 1: Pedigree and records of Example 4.1, one row per animal
+    no3 = fill(missing, 3)
+    ped = DataFrame(
+        calf = 1:8,
+        sex = [no3; ["M", "F", "F", "M", "M"]],
+        sire = [0, 0, 0, 1, 3, 1, 4, 3],
+        dam = [0, 0, 0, 0, 2, 2, 5, 6],
+        wwg = [no3; [4.5, 2.9, 3.9, 3.5, 5.0]],
+    )
+    rec = dropmissing(ped, :wwg)
+    y = rec.wwg
+    X, _ = incidence(rec.sex; levels = ["M", "F"])
+    Z = incidence(rec.calf, nrow(ped))
     Ai = ainv(ped)
-    a = RandomEffect(incidence(calf, 8), Ai, 20.0)
+    a = RandomEffect(Z, Ai, 20.0)
 
     # Step 2: Round 1 with Mrode's random numbers, starting from b = u = 0
     m = mme(y, X, [a]; σ²e = 40.0)
@@ -113,6 +126,15 @@ function ex_18_1()
         0,
     )
     x = gibbs_sweep!(zeros(10), m.lhs, m.rhs; scale = 40.0, rng)
+    #    written out: one sweep of single-site updates, each θᵢ drawn from
+    #    N((rᵢ - Σⱼ≠ᵢ Cᵢⱼθⱼ)/Cᵢᵢ, σ²e/Cᵢᵢ) given the current values of the others
+    C, r = Matrix(m.lhs), m.rhs
+    θ = zeros(10)
+    for i = 1:10
+        μi = (r[i] - C[i, :]' * θ + C[i, i] * θ[i]) / C[i, i]
+        θ[i] = μi + rng.z[i] * sqrt(40.0 / C[i, i])
+    end
+    check("round 1 written out = gibbs_sweep!()", θ, x; atol = 1e-12)
     check(
         "round 1: b and u",
         x,
@@ -130,7 +152,7 @@ function ex_18_1()
         ];
         atol = 2e-3,
     )
-    e = y - [X a.Z] * x
+    e = y - [X Z] * x
     check(
         "residuals and ê'ê",
         [e; e'e],
@@ -186,5 +208,12 @@ function ex_18_1()
         "  (5 records: the posteriors are very diffuse; means are not shown in the",
         " book)",
     )
-    (; x, means, f)
+
+    ped.blup = bl[3:end]
+    ped.gibbs_fixed = vec(mean(means; dims = 2))[3:end]
+    ped.gibbs_full = f.x[3:end]
+    println("\nBLUP, posterior means with variances fixed, and with variances sampled:")
+    show_table(ped)
+
+    (; x, means, f, ped)
 end

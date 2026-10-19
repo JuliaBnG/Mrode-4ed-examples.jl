@@ -305,6 +305,9 @@ Estimation of genetic and residual variance components:
 Markov Chain Monte Carlo (MCMC) Bayesian parameter estimation:
 - **`ex_18_1` (Section 18.2)**: Univariate animal model Gibbs sampler
   with replayed pseudo-random deviates and posterior chain convergence.
+  Round 1 is written out as a loop of single-site updates and checked
+  against `gibbs_sweep!`; BLUP and posterior means are compared in the
+  data table.
 - **`ex_18_2` (Section 18.3)**: Multivariate block Gibbs sampler with
   inverse-Wishart covariance updates for $R$ and $G$.
 

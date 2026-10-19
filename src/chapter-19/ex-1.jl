@@ -1,38 +1,41 @@
 """
     ex_19_1() -> DataFrame
 
-Run Examples 19.1 and 19.2 from Mrode & Pocrnic (2023): Solving the Mixed Model Equations
-from Example 4.1 using iterative methods on the explicit coefficient matrix:
-1.  **Jacobi iteration with relaxation** (Example 19.1, ``\\omega = 0.8`` for breeding
-   values)
-2. **Gauss–Seidel iteration** (Example 19.2)
+Examples 19.1 & 19.2: Solving the Mixed Model Equations by Jacobi and Gauss–Seidel iteration
+(Mrode & Pocrnic, 2023, Section 19.4).
 
-# Iteration Formulations
-For the linear system ``C\\mathbf{x} = \\mathbf{r}``:
-- **Jacobi with relaxation factor ``\\omega_i``**:
+# Model Formulation
+For the linear system ``Cx = r`` (here the 10-equation univariate animal model MME of
+[`ex_04_1`](@ref)):
+- **Jacobi iteration with relaxation factor ``\\omega_i``** (Example 19.1):
   ```math
-  x_i^{(k+1)} = (1 - \\omega_i) x_i^{(k)} + \\frac{\\omega_i}{C_{ii}} \\left( r_i - \\sum_{j
-      \\neq i} C_{ij} x_j^{(k)} \\right)
+  x_i^{(k+1)} = x_i^{(k)} + \\frac{\\omega_i}{C_{ii}} \\left( r_i - \\sum_{j=1}^n
+      C_{ij} x_j^{(k)} \\right)
   ```
-  Uses values from the previous round ``k`` exclusively. An under-relaxation factor
-  ``\\omega_i = 0.8`` is applied to random animal equations to ensure convergence.
-- **Gauss–Seidel**:
+  Every equation is updated using only the previous round's vector ``x^{(k)}``. An
+  under-relaxation weight ``\\omega_i = 0.8`` is applied to the animal equations (with
+  ``\\omega_i = 1.0`` on the fixed sex equations) so that the iteration converges.
+- **Gauss–Seidel iteration** (Example 19.2):
   ```math
   x_i^{(k+1)} = \\frac{1}{C_{ii}} \\left( r_i - \\sum_{j < i} C_{ij} x_j^{(k+1)} - \\sum_{j
       > i} C_{ij} x_j^{(k)} \\right)
   ```
-  Immediately incorporates newly updated values ``x_j^{(k+1)}`` within the same round,
-  typically converging in fewer iterations without requiring relaxation.
+  Each update immediately uses the newly computed entries ``x_j^{(k+1)}`` (``j < i``) within
+  the same sweep, converging faster without needing under-relaxation.
 
-# Written Out
-Mrode's starting values are computed from the records with `groupby`; both iterations
-are written as explicit loops and compared with `jacobi` and `gauss_seidel`. The
-convergence criterion of both methods by round is collected in a table.
+# Key Concepts Illustrated
+1. **Computing Mrode's starting values from the data table**: In `data_19`, the
+   starting vector ``x^{(0)}`` is computed directly from the `DataFrame` of records using
+   `groupby` (raw sex means for fixed effects, deviations from the sex mean for recorded
+   calves, and 0 for unrecorded ancestors).
+2. **Both iterative schemes written out as explicit loops**: We write out the 20 rounds of
+   relaxed Jacobi and Gauss–Seidel in plain Julia, verify that they match `jacobi` and
+   `gauss_seidel`, and tabulate Mrode's relative squared-change convergence criterion
+   ``\\|x^{(k)} - x^{(k-1)}\\|^2 / \\|x^{(k)}\\|^2`` side by side by round.
 
 # Returns
-The table of the convergence criterion by round (`round`, `conv_jacobi`,
-`conv_gauss_seidel`); the iterates and solutions are printed and checked against the
-book.
+A `DataFrame` with columns `round`, `conv_jacobi`, and `conv_gauss_seidel` over the 20
+iterations.
 """
 function ex_19_1()
     (; m, x0) = data_19()

@@ -1,43 +1,47 @@
 """
     ex_19_3() -> DataFrame
 
-Run Examples 19.3, 19.4, and 19.6 from Mrode & Pocrnic (2023): Iteration on Data (IOD)
-for the animal model:
-1. **Gauss–Seidel IOD** (Example 19.3)
-2. **Gauss–Seidel IOD with unknown parent groups** (Example 19.4)
-3. **Preconditioned Conjugate Gradient (PCG) on data** (Example 19.6)
+Examples 19.3, 19.4 & 19.6: Iteration on Data (IOD) and Preconditioned Conjugate Gradient
+(PCG) for the animal model (Mrode & Pocrnic, 2023, Sections 19.5.1, 19.5.2, and 19.6;
+Schaeffer & Kennedy, 1986; Strandén & Lidauer, 1999).
 
-# Iteration on Data (IOD)
-In large-scale genetic evaluations, forming and storing the MME coefficient matrix ``C``
-is computationally prohibitive. IOD computes updates directly by scanning data records
-and pedigree links:
--  **Data scan**: Accumulates adjusted phenotypic contributions
-  ``\\sum (y_i - \\hat{y}_{i,-j})`` for fixed effects and recorded animals.
-- **Pedigree scan**: Accumulates relationship contributions from parents, mates, and progeny
-  using the rules of ``A^{-1}``.
+# Model Formulation
+In large national evaluations, assembling and storing the sparse coefficient matrix ``C`` is
+avoided by computing the action of ``C`` directly from a scan of the data and pedigree files
+(`AnimalModelIOD`):
+- **Data scan**: Accumulates phenotype and incidence contributions for fixed effects and
+  recorded animals.
+- **Pedigree scan**: Accumulates ``\\lambda A^{-1}`` contributions from each animal's
+  parents, mates, and progeny using Henderson's rules.
 
-# Unknown Parent Groups (Example 19.4)
-Incorporates phantom parent groups 9 and 10. The unconstrained system is singular
-(due to collinearity between group effects and base population mean). Setting Group 9 to
-zero yields the exact QP-transformed solutions of Example 4.4.
+Three matrix-free solvers are demonstrated on the data of [`ex_04_1`](@ref) and
+[`ex_04_4`](@ref):
+1. **Gauss–Seidel IOD** (Example 19.3): Produces the exact same sequence of iterates as
+   Gauss–Seidel on the assembled matrix ``C`` (Example 19.2).
+2. **Gauss–Seidel IOD with unknown parent groups** (Example 19.4): Replaces unknown sires and
+   dams by phantom groups 9 and 10; constraining group 9 to zero recovers the QP-transformed
+   solution of [`ex_04_4`](@ref).
+3. **Preconditioned Conjugate Gradient (PCG) on data** (Example 19.6): Solves ``Cx = b``
+   using only the matrix-free product ``q_k = C p_k`` (`iod(q, p)`) and the diagonal
+   preconditioner ``M = \\mathrm{diag}(C)``.
 
-# Preconditioned Conjugate Gradient (Example 19.6)
-Solves ``C\\mathbf{x} = \\mathbf{r}`` matrix-free via the action ``C \\mathbf{d}`` on data:
-```math
-\\alpha_k = \\frac{\\mathbf{r}_k' M^{-1} \\mathbf{r}_k}{\\mathbf{p}_k' C \\mathbf{p}_k},
-    \\quad
-\\mathbf{x}_{k+1} = \\mathbf{x}_k + \\alpha_k \\mathbf{p}_k
-```
-with diagonal preconditioner ``M = \\mathrm{diag}(C)``.
+# Key Concepts Illustrated
+1. **Equivalence of IOD and assembled-matrix iteration**: Every round of `gauss_seidel(iod)`
+   matches `gauss_seidel(m.lhs, m.rhs)` to machine precision, and `iod(v, x0)` equals
+   `m.lhs * x0`.
+2. **Matrix-free PCG written out as an explicit loop**: We write out the PCG recurrence
+   (step length ``\\alpha_k = (r_k' z_k)/(p_k' C p_k)``, conjugate direction update
+   ``\\beta_k = (r_{k+1}' z_{k+1})/(r_k' z_k)``) directly around `iod(q, pp)`, check it
+   against `pcg`, and compare the Gauss–Seidel IOD, PCG, and direct MME solutions in a table.
 
-# Written Out
-PCG is written as an explicit loop on the matrix-free product ``C\\mathbf{p}`` of the
-data scan and compared with `pcg`. The solutions of Gauss–Seidel on data, PCG and the
-direct solution of the MME are collected in a table.
+# Notes on Text Discrepancies
+1. In Example 19.3, the column headed "At convergence" is round 20, whereas the stated
+   ``10^{-7}`` criterion is already met at round 9.
+2. In Example 19.4, the constrained column printed in the book (`5.474 … -1.795`) has not yet
+   converged to the exact constrained solution of Example 4.4 (`5.458 … -1.769`).
 
 # Returns
-The table of solutions (`effect`, `gauss_seidel_iod`, `pcg`, `direct`); the iterates
-are printed and checked against the book.
+A `DataFrame` comparing the solutions (`effect`, `gauss_seidel_iod`, `pcg`, and `direct`).
 """
 function ex_19_3()
     (; ped, calf, sex, y, m, x0, α) = data_19()

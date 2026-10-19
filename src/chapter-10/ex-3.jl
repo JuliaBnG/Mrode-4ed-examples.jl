@@ -23,14 +23,22 @@ where:
   knot points.
 
 # Key Concepts Illustrated
-1. **Full-order fit** ``\\hat{C} = \\Phi^{-1} G (\\Phi')^{-1}``, in Julia `Φ \\ G / Φ'`.
-2. **Reduced-order fit by WLS**, written out with
-   ``\\mathrm{vec}(\\Phi C \\Phi') = (\\Phi \\otimes \\Phi)\\,\\mathrm{vec}(C)``: the design
-   matrix is ``X = L(\\Phi_2 \\otimes \\Phi_2)D``, with ``L`` picking the lower triangle of
-   ``G`` and ``D`` the duplication matrix of ``C``. Both compared with
+1. **Full-Order Fit**: Computed directly as ``\\hat{C} = \\Phi^{-1} G (\\Phi')^{-1}`` (in Julia
+   `Φ \\ G / Φ'`) and verified against `covariance_function`.
+2. **Reduced-Order Fit by WLS**: Written out explicitly using the identity
+   ``\\mathrm{vec}(\\Phi C \\Phi') = (\\Phi \\otimes \\Phi)\\,\\mathrm{vec}(C)``. The design matrix
+   for the unique elements is ``X = L(\\Phi_2 \\otimes \\Phi_2)D``, where ``L`` selects the
+   lower triangle of ``G`` and ``D`` is the duplication matrix of ``C``, verified against
    `covariance_function`.
-3. **Continuity**: variances and covariances at any age, tabulated over 90–240 days
-   for the full- and reduced-order functions.
+3. **Continuous (Co)variance Trajectory**: Evaluates genetic variances and covariances at
+   any age along the trajectory, tabulated over 90–240 days for both the full- and
+   reduced-order covariance functions.
+
+# Note on Text Discrepancy
+In the linear spline table of Section 10.3.5 (knots at 4, 106, 208, and 310 DIM), the book
+interchanges the two non-zero weights ``(t - t_i)/(t_{i+1} - t_i)`` and
+``(t_{i+1} - t)/(t_{i+1} - t_i)`` at interior days in milk (assigning the larger weight to
+the farther knot). Standard linear interpolation is computed here.
 
 # Returns
 A `NamedTuple` with fields:

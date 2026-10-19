@@ -1,48 +1,52 @@
 """
     ex_18_2() -> NamedTuple
 
-Run Example 18.2 from Mrode & Pocrnic (2023): Multivariate block Gibbs sampling
-for a multi-trait animal model (WWG and PWG of Example 6.1).
+Example 18.2: Multivariate block Gibbs sampling for a bivariate animal model (Mrode &
+Pocrnic, 2023, Section 18.3).
 
-# Model & Priors
-For ``t`` traits with phenotypic observations ``Y`` (``N \\times t``):
-```math
-\\mathrm{vec}(Y') = (X \\otimes I) \\mathbf{b} + (Z \\otimes I) \\mathbf{u} + \\mathbf{e}
-```
-with genetic covariances ``\\mathbf{u} \\sim N(0, G_0 \\otimes A)`` and
-residuals ``\\mathbf{e} \\sim N(0, R_0 \\otimes I)``.
-
-- **Inverse-Wishart Conjugate Priors**:
-  ```math
-  G_0 \\sim W^{-1}(\\nu_u, V_u), \\quad R_0 \\sim W^{-1}(\\nu_e, V_e)
-  ```
-  with conditional posteriors:
+# Model Formulation
+For ``t`` traits measured on ``N`` animals with observation matrix ``Y`` (``N \\times t``),
+genetic covariance ``\\mathrm{var}(u) = G_0 \\otimes A``, and residual covariance
+``\\mathrm{var}(e) = R_0 \\otimes I``:
+- **Inverse-Wishart conjugate priors**: Placing ``G_0 \\sim W^{-1}(\\nu_u, V_u)`` and
+  ``R_0 \\sim W^{-1}(\\nu_e, V_e)`` yields inverse-Wishart full conditional distributions:
   ```math
   \\begin{aligned}
-  G_0 \\mid \\mathbf{u} &\\sim W^{-1}\\left(\\nu_u + q, \\; V_u + \\sum_{i,j} A^{ij}
-      \\mathbf{u}_i \\mathbf{u}_j'\\right) \\\\
-  R_0 \\mid \\mathbf{e} &\\sim W^{-1}\\left(\\nu_e + N, \\; V_e + \\sum_k \\mathbf{e}_k
-      \\mathbf{e}_k'\\right)
+  G_0 \\mid u &\\sim W^{-1}\\!\\left(\\nu_u + q, \\; V_u + U' A^{-1} U\\right), \\\\
+  R_0 \\mid e &\\sim W^{-1}\\!\\left(\\nu_e + N, \\; V_e + E' E\\right),
   \\end{aligned}
   ```
+  where ``U`` (``q \\times t``) and ``E`` (``N \\times t``) are the matrices of animal
+  breeding values and residuals across traits.
+- **Data augmentation for missing records**: When an animal has trait 1 (WWG) observed but
+  trait 2 (PWG) missing, the missing phenotype is sampled at each Gibbs sweep from its
+  conditional normal distribution given the observed trait:
+  ```math
+  y_{i,2} \\mid y_{i,1}, b, u, R_0 \\sim N\\!\\left(
+  x_i'b_2 + u_{i,2} + \\frac{r_{12}}{r_{11}}(y_{i,1} - x_i'b_1 - u_{i,1}), \\;
+  r_{22} - \\frac{r_{12}^2}{r_{11}}\\right),
+  ```
+  restoring a complete ``N \\times t`` data matrix so that the complete-data MME and residual
+  sum-of-squares updates can be used directly.
 
-# Data Augmentation
-For missing phenotypes (e.g., individual 1 missing trait 2):
-```math
-y_{i, 2} \\mid y_{i, 1}, \\mathbf{b}, \\mathbf{u}, R_0 \\sim N\\left(\\mu_{2\\mid 1}, \\;
-    \\sigma_{e_{2\\mid 1}}^2\\right)
-```
-Missing values are sampled at every Gibbs iteration, allowing straightforward
-complete-data matrix updates.
-
-# Tables
-The data are one table, one row per animal, with both traits; BLUP and posterior means
-are added as columns. For the missing record the conditional distribution used for
-data augmentation is computed at the BLUP solutions.
+# Key Concepts Illustrated
+1. **Equivalence with multi-trait BLUP**: Using the 8-animal data table of [`ex_06_1`](@ref),
+   we run 8 independent chains with ``R_0`` and ``G_0`` fixed (`gibbs_mt`) and verify that
+   the posterior means converge to the exact bivariate BLUP solutions (stored side by side in
+   `ped`).
+2. **Data augmentation in action**: Setting calf 4's PWG record to `missing`, we compute the
+   conditional normal distribution ``N(\\mu_{2\\mid 1}, \\sigma_{e_{2\\mid 1}}^2)`` explicitly
+   at the BLUP solutions and verify that the augmented Gibbs sampler converges to the
+   BLUP of the same data with calf 4's PWG missing (the missing-record pattern of
+   [`ex_06_2`](@ref)).
+3. **Sampling ``R_0`` and ``G_0``**: With proper inverse-Wishart priors (``\\nu = 10``)
+   centred on ``R_0`` and ``G_0``, we compare prior and posterior covariance means in a
+   summary table.
 
 # Returns
-A `NamedTuple` with field `ped` (the data with BLUP and posterior means) and `f`: the chain with (co)variances sampled (`GibbsResult`:
-posterior means of the location parameters, ``R_0`` and ``G_0``, and the variance samples).
+A `NamedTuple` with fields:
+- `f`: Full multivariate Gibbs chain with ``R_0`` and ``G_0`` sampled (`GibbsResult`).
+- `ped`: The data table with `blup_wwg`, `blup_pwg`, `post_wwg`, and `post_pwg` added.
 """
 function ex_18_2()
     println("Example 18.2: multivariate Gibbs sampling")

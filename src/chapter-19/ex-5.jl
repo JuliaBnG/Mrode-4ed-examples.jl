@@ -1,37 +1,46 @@
 """
     ex_19_5() -> DataFrame
 
-Run Example 19.5 from Mrode & Pocrnic (2023): Solving the Reduced Animal Model (RAM)
-with maternal effects (from Example 8.2) using Gauss–Seidel iteration.
+Example 19.5: Reduced Animal Model (RAM) with maternal effects solved by Gauss–Seidel
+iteration (Mrode & Pocrnic, 2023, Section 19.5.3).
 
 # Model Formulation
-For the maternal RAM:
+For the maternal RAM of [`ex_08_2`](@ref):
 ```math
-\\mathbf{y} = X\\mathbf{b} + Z_1 \\mathbf{a}_{p} + Z_2 \\mathbf{m}_{p} + S\\mathbf{pe} +
-    \\mathbf{e}^*
+y = Xb + Z_1 a_p + Z_2 m_p + S pe + e^*
 ```
-where ``\\mathbf{a}_p`` and ``\\mathbf{m}_p`` are direct and maternal additive genetic
-merits of parents only. Non-parent progeny are absorbed into the residual error, modifying
-the effective residual variance:
--  For records of parent calves: ``\\sigma_{e^*}^2 = \\sigma_e^2 = 350``
-  (``r^{ii} = 1/350 \\approx 0.002857``)
--  For records of non-parent calves:
+where ``a_p`` and ``m_p`` are the direct and maternal breeding values of parents only
+(animals 1–9). Absorbing the direct Mendelian sampling of non-parent calves (animals 10–14)
+into ``e^*`` gives heterogeneous residual variances:
+- For records of parent calves (animals 5–9): ``\\sigma_{e^*}^2 = \\sigma_e^2 = 350``
+  (``R_{ii}^{-1} = 1/350 \\approx 0.002857``).
+- For records of non-parent calves (animals 10–14):
   ``\\sigma_{e^*}^2 = \\sigma_e^2 + \\frac{1}{2} g_{11} = 350 + 75 = 425``
-  (``r^{ii} = 1/425``)
+  (``R_{ii}^{-1} = 1/425 \\approx 0.002353``).
 
-# Gauss–Seidel on Singular Systems
-Because the fixed effects (3 herds, 2 pens) are linearly dependent, the MME coefficient
-matrix is singular. Gauss–Seidel iteration converges to one of the solutions (which one
-depends on the starting values) without requiring explicit full-rank reparameterization.
+# Key Concepts Illustrated
+1. **Gauss–Seidel on an unconstrained singular system**: Because the fixed effects (3 herds
+   and 2 pens) are linearly dependent, the MME coefficient matrix is singular. Without
+   imposing a constraint, Gauss–Seidel still converges to a valid solution of the normal
+   equations (which specific generalized-inverse solution it reaches depends on the starting
+   vector).
+2. **Invariance of estimable functions and BLUPs**: Comparing the unconstrained Gauss–Seidel
+   solution with the constrained solution of [`ex_08_2`](@ref) (``\\mathrm{herd}_1 = 0``)
+   shows that while the individual herd and pen numbers differ, every estimable cell mean
+   ``\\mathrm{herd}_i + \\mathrm{pen}_j`` and all random genetic and permanent environmental
+   solutions (`direct`, `maternal`, `pe`) are identical.
 
-# Estimable Functions
-The Gauss–Seidel solution is compared with the solution constrained by herd 1 = 0
-(Example 8.2): the random effects and the cell means ``\\mathrm{herd}_i + \\mathrm{pen}_j``
-agree, while the individual herd and pen solutions do not.
+# Note on Text Discrepancy
+The dataset is that of Table 8.1 ([`ex_08_1`](@ref) and [`ex_08_2`](@ref)), where the second
+fixed factor is called "Pen" (levels 1 and 2); in Example 19.5 the book labels those same two
+levels "Sex" (Male and Female). In addition, because Mrode's relative stopping criterion
+divides by ``\\|x^{(k)}\\|^2`` (which is dominated by the herd means near 30), stopping at
+``10^{-14}`` leaves errors of order ``10^{-5}`` in the random effects; we iterate to
+``10^{-24}`` so that the random effects and cell means match [`ex_08_2`](@ref) to 8 decimal
+places.
 
 # Returns
-The table of parents with their direct, maternal and maternal pe solutions; the
-solutions are printed and checked against the book.
+A `DataFrame` of the 9 parents with their `direct`, `maternal`, and maternal `pe` solutions.
 """
 function ex_19_5()
     println("Example 19.5: RAM with maternal effects by Gauss–Seidel")

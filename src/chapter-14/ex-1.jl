@@ -24,22 +24,40 @@ In crossbred and admixed populations with breeds 1 and 2:
    Approximates the partial relationship model using the standard pedigree ``A`` with
    covariables ``\\sqrt{f_1}, \\sqrt{f_2}, \\sqrt{h_{12}}``.
 
-# Tables and MME
-The animals are kept in one table with breed fractions, segregation coefficients and
-all solutions as columns. The MME of the three models are written out as ``T'T + \\Sigma``
-(``T = [X\\ Z_1\\ Z_2\\ Z_{12}]`` with generalized inverses of ``A_1, A_2, A_{12}``;
-``Z = I`` with ``\\sigma_e^2 G^{-1}``; and the random-regression covariables
-``\\sqrt{f_1}, \\sqrt{f_2}, \\sqrt{h_{12}}``) and compared with `mme`.
+# Key Concepts Illustrated
+1. **One table for all animals**: Pedigree, herd, phenotype, breed fractions (`f1`, `f2`),
+   segregation coefficients (`h12`), and the genetic predictions from all three models are
+   kept side by side as columns of `animals`.
+2. **Writing out the MME of all three models as ``T'T + \\Sigma``**:
+   - **Model 1 (partial relationships)**: ``T = [X\\ Z_1\\ Z_2\\ Z_{12}]``, where ``Z_k``
+     picks the animals with ``f_k > 0`` (or ``h_{12} > 0``) and ``\\Sigma`` holds
+     ``\\sigma_e^2/\\sigma_k^2`` times the generalized inverses of ``A_1, A_2, A_{12}``
+     (animals with zero contribution in a partial matrix have zero rows/columns and are
+     constrained to zero).
+   - **Model 2 (combined model)**: With one record per animal (``Z = I``), the MME reduce to
+     ``[X'X\\ X';\\ X\\ I + \\sigma_e^2 G^{-1}]`` and give ``\\hat{a} = \\hat{a}^{(1)} +
+     \\hat{a}^{(2)} + \\hat{a}^{(12)}``.
+   - **Model 3 (random-regression approximation, Example 14.2)**: ``T`` uses the diagonal
+     covariables ``\\mathrm{Diag}(\\sqrt{f_1}), \\mathrm{Diag}(\\sqrt{f_2}),
+     \\mathrm{Diag}(\\sqrt{h_{12}})``, and ``\\Sigma`` uses the full-pedigree ``A``
+     restricted to the animals carrying each component.
+   All three explicit systems are checked against `mme`.
+
+# Note on Text Discrepancy
+In Example 14.2, Table 14.3 of the book lists the weighted breed contributions
+``\\sqrt{f_p}\\,\\hat{u}_p`` and ``\\sqrt{h_{12}}\\,\\hat{u}_{12}`` (which sum directly to the
+total breeding value ``\\hat{a}^*``) rather than the raw random-regression coefficients
+``\\hat{u}_p``.
 
 # Returns
 A `NamedTuple` with fields:
-- `b`: Fixed effect solutions from the partial relationship model.
+- `b`: Fixed effect solutions (herd and breed) from the partial relationship model.
 - `u`: Breed-specific solutions (breed 1, breed 2, segregation).
 - `a`: Total breeding values from the combined model.
 - `br`: Fixed effect solutions from the random-regression model.
 - `ur`: Random-regression coefficients.
 - `bv`: Total breeding values from the random-regression model.
-- `animals`: The animals with `h12`, `u1`, `u2`, `u12`, `a` and `a_rr` added.
+- `animals`: The animal table with `h12`, `u1`, `u2`, `u12`, `a`, and `a_rr` added.
 """
 function ex_14_1()
     println("Example 14.1: breed-specific and combined multibreed models")

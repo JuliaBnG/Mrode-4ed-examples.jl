@@ -1,54 +1,52 @@
 """
     ex_17_2() -> NamedTuple
 
-Run Section 17.7 from Mrode & Pocrnic (2023): Restricted Maximum Likelihood (REML)
-estimation of variance components in an animal model using:
-1. Average Information REML (AI-REML, Table 17.3)
-2. Expectation-Maximization REML (EM-REML, Eqns 17.5–17.6)
+Section 17.7: Restricted Maximum Likelihood (REML) for an animal model by Average
+Information (AI-REML) and Expectation–Maximization (EM-REML) (Mrode & Pocrnic, 2023,
+Section 17.7; Patterson & Thompson, 1971; Gilmour et al., 1995).
 
-# Model & Likelihood
-For the animal model:
-```math
-\\mathbf{y} = X\\mathbf{b} + Z\\mathbf{a} + \\mathbf{e}
-```
-with ``\\mathbf{a} \\sim N(0, A \\sigma_a^2)``, ``\\mathbf{e} \\sim N(0, I \\sigma_e^2)``,
-and ``V = ZAZ' \\sigma_a^2 + I \\sigma_e^2``. The restricted log-likelihood is:
+# Model Formulation
+For the univariate animal model ``y = Xb + Za + e`` with ``a \\sim N(0, A \\sigma_a^2)``,
+``e \\sim N(0, I \\sigma_e^2)``, and phenotypic covariance ``V = ZAZ' \\sigma_a^2 +
+I \\sigma_e^2``, the restricted log-likelihood (up to an additive constant) is:
 ```math
 \\log L_R = -\\frac{1}{2} \\left( \\log |C| + \\log |A| + N \\log \\sigma_e^2 + q \\log
-    \\sigma_a^2 + \\mathbf{y}' \\mathbf{P} \\mathbf{y} \\right)
+    \\sigma_a^2 + y' P y \\right)
 ```
-up to a constant, where ``C`` is the coefficient matrix of the MME built with
-``R^{-1} = I/\\sigma_e^2`` and ``A^{-1}/\\sigma_a^2``, ``q`` is the number of animals and
-``\\mathbf{P} = V^{-1} - V^{-1} X (X' V^{-1} X)^- X' V^{-1}``.
+where ``C`` is the MME coefficient matrix in the general ``R^{-1}`` form (built with
+``R^{-1} = I/\\sigma_e^2`` and ``A^{-1}/\\sigma_a^2``), ``q`` is the number of animals in
+the pedigree, and ``y'Py = y'R^{-1}y - \\hat{\\theta}' r`` is the generalized residual
+quadratic form.
 
-# Algorithms
--  **AI-REML**: Averages the observed and expected information matrices, eliminating
-  expensive trace calculations of matrix inverses by using data-driven quadratic forms:
-  ```math
-  \\boldsymbol{\\theta}^{(k+1)} = \\boldsymbol{\\theta}^{(k)} +
-      \\mathcal{I}_{\\mathrm{AI}}^{-1} \\nabla \\log L_R
-  ```
-  The inverse Average Information matrix ``\\mathcal{I}_{\\mathrm{AI}}^{-1}`` at convergence
-  provides the asymptotic sampling covariance matrix for
-  ``(\\hat{\\sigma}_e^2, \\hat{\\sigma}_a^2)``.
-- **EM-REML**: Iterative updates based on conditional expectations of random effects:
-  ```math
-  \\sigma_a^{2(k+1)} = \\frac{\\hat{\\mathbf{a}}' A^{-1} \\hat{\\mathbf{a}} +
-      \\mathrm{tr}(A^{-1} C^{aa}) \\sigma_e^{2(k)}}{q}
-  ```
-  Guaranteed monotonic convergence in likelihood, though slower than AI-REML.
+# Key Concepts Illustrated
+1. **Restricted log-likelihood and first EM iterate written out from the MME**: Using the
+   8-animal pedigree and 5 records in `ped`, we assemble the MME at the starting values
+   ``(\\sigma_e^2 = 0.4,\\, \\sigma_a^2 = 0.2)`` and write out both ``\\log L_R`` and the
+   first EM-REML update (Eqns 17.5–17.6):
+   ```math
+   \\sigma_a^{2(1)} = \\frac{\\hat{a}' A^{-1} \\hat{a} + \\mathrm{tr}(A^{-1} C^{aa})
+   \\sigma_e^2}{q}, \\quad
+   \\sigma_e^{2(1)} = \\frac{y'y - \\hat{\\theta}' W'y}{N - r(X)},
+   ```
+   verifying both against `reml`.
+2. **AI-REML vs EM-REML convergence**: AI-REML replaces expensive trace evaluations with
+   working-variate quadratic forms (the Average Information matrix ``\\mathcal{I}_{\\mathrm{AI}}``)
+   and converges in 5 iterates, whereas EM-REML is first-order and requires ~1000 iterates to
+   reach the same maximum. At convergence, ``\\mathcal{I}_{\\mathrm{AI}}^{-1}`` provides the
+   asymptotic sampling covariance matrix of ``(\\hat{\\sigma}_e^2, \\hat{\\sigma}_a^2)``, and
+   the final EBVs are added as a column of `ped`.
 
-# Written Out
-The data are one table, one row per animal. The restricted log-likelihood at the
-starting values and the first EM iterate are written out from the MME and compared
-with `reml`; the EBV at the AI-REML estimates are added as a column.
+# Note on Text Discrepancy
+At the starting values, the book prints calf 4's breeding value as ``\\hat{a}_4 = -0.254``;
+its sign is ``+0.254``, which is required to reproduce the book's own residual for calf 4
+(``2.6 - 2.144 - 0.254 = 0.2022``).
 
 # Returns
 A `NamedTuple` with fields:
-- `r`: AI-REML result (`REMLResult`: estimates, log-likelihood, inverse AI matrix,
-  iteration history and final MME solutions).
+- `r`: AI-REML result (`REMLResult`: estimates, log-likelihoods, inverse AI matrix,
+  iteration history, and final MME solutions).
 - `em`: EM-REML result (`REMLResult`).
-- `ped`: The data with the EBV at the AI-REML estimates added.
+- `ped`: The data table with the EBVs at the AI-REML estimates (`ebv`) added.
 """
 function ex_17_2()
     println("Section 17.7: REML for an animal model")

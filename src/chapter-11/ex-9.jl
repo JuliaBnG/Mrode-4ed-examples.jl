@@ -25,32 +25,33 @@ marker effects ``g_j`` and variances ``\\sigma_{gj}^2``:
   ``1 - \\pi`` is also estimated from the data using a uniform, Beta(1, 1), prior on
   ``\\pi``.
 
-# Algorithm: Fast Gibbs Sampling via Residual Updating
-Instead of solving full linear systems each cycle, residuals
-``e = y - \\mathbf{1}\\mu - Z g`` are updated efficiently one marker at a time:
-```math
-e_{\\mathrm{new}} = e_{\\mathrm{old}} + z_j g_{j,\\mathrm{old}} - z_j g_{j,\\mathrm{new}}
-```
+# Key Concepts Illustrated
+1. **Fast Gibbs Sampling via Residual Updating**: Instead of solving full linear systems
+   each cycle, residuals ``e = y - \\mathbf{1}\\mu - Z g`` are updated one marker at a time:
+   ```math
+   e_{\\mathrm{new}} = e_{\\mathrm{old}} + z_j g_{j,\\mathrm{old}} - z_j g_{j,\\mathrm{new}}
+   ```
+   The deterministic starting mean and residuals are checked against the book.
+2. **Data and Result Tables**: Posterior mean SNP effects from all four Bayesian models are
+   collected alongside the book's printed values in a SNP `DataFrame` (including marker
+   inclusion probabilities for BayesB and BayesCπ), and the resulting DGVs ``M\\hat{g}`` are
+   added as columns of the bull table so the methods can be compared across reference bulls
+   and selection candidates.
+3. **Behavior of a Monomorphic SNP**: SNP 7 is 0 in all reference bulls (``z_7'z_7 = 0``),
+   so the likelihood carries no information about it. Its variance and inclusion indicator
+   are sampled from their priors, giving an inclusion probability of ``1 - \\pi`` (0.7 in
+   BayesB, ``1 - \\mathrm{E}(\\pi \\mid y)`` in BayesCπ) and a posterior mean effect centered
+   on zero.
 
-# Tables
-The posterior mean SNP effects of the four methods are collected, next to the
-book's values, in one table of SNPs (with inclusion probabilities for BayesB and
-BayesCπ), and the DGV ``M\\hat{g}`` of all bulls of each method are added as
-columns of the bull table, so the methods can be compared on the candidates.
-
-# Note on a Monomorphic SNP
-SNP 7 is 0 in all reference bulls (``z_7'z_7 = 0``), so the data carry no information
-on it: its variance and inclusion are sampled from their priors, so that its inclusion
-probability is ``1 - \\pi`` (0.7 in BayesB, ``1 - \\mathrm{E}(\\pi \\mid y)`` in BayesCπ),
-and its effect is centred on zero. (Before Breeding v0.1.6, `bayes_snp` evaluated
-``\\log 0`` and ``0/0`` for such a SNP and reported inclusion 1 or 0; the resulting
-BayesCπ posterior ``\\pi`` of ≈ 0.67 was not a discrepancy of the book.)
-
-# Note on Monte Carlo Verification
-The book's first iteration values depend on its specific random numbers, and its posterior
-means (based on only 7,000 samples) carry noticeable Monte Carlo error. Here, the
-deterministic start is checked exactly and posterior means from a longer chain (50,000
-iterations) are verified within Monte Carlo tolerance.
+# Notes on Text Discrepancies
+1. **Initial residual typo**: For bull 1 (animal 13), ``y_1 = 9.0``, ``\\hat{\\mu} = 9.888``,
+   and marker dosages summing to 9 (6 non-zero SNPs) at ``0.05`` give
+   ``\\hat{e}_1 = 9.0 - 9.888 - 0.45 = -1.338``,
+   whereas the book prints ``-1.388``.
+2. **Monte Carlo Verification**: The book's first-iteration values depend on its specific
+   random numbers, and its posterior means (from 7,000 samples) carry noticeable Monte Carlo
+   error. Here, the deterministic starting step is checked exactly and posterior means from a
+   50,000-iteration chain are verified within Monte Carlo tolerance.
 
 # Returns
 A `Dict{Symbol, BayesResult}` with keys `:A`, `:B`, `:C`, `:Cpi`.

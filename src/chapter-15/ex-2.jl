@@ -1,67 +1,62 @@
 """
     ex_15_2() -> JointBinaryResult
 
-Run Example 15.2 from Mrode & Pocrnic (2023): Joint analysis of a continuous trait
-(birth weight, BW) and a binary threshold trait (calving difficulty, CD)
-using the joint threshold-linear model of Foulley, Gianola & Im (1983).
+Example 15.2: Joint analysis of a continuous trait (birth weight, BW) and a binary threshold
+trait (calving difficulty, CD) (Mrode & Pocrnic, 2023, Section 15.3; Foulley et al., 1983).
 
 # Model Formulation
-Let trait 1 be continuous (birth weight, ``y``) and trait 2 be binary
-(calving difficulty, ``w \\in \\{0, 1\\}`` with underlying liability ``l``):
+Let trait 1 be continuous (birth weight, ``y``) and trait 2 be binary (calving difficulty,
+``w \\in \\{0, 1\\}`` governed by an underlying continuous liability ``\\ell``):
 ```math
 \\begin{aligned}
-y &= X_1 \\beta_1 + Z_1 u_1 + e_1 \\\\
-l &= X_2 \\beta_2 + Z_2 u_2 + e_2
+y &= X_1 b_1 + Z_1 u_1 + e_1 \\\\
+\\ell &= X_2 b_2 + Z_2 u_2 + e_2
 \\end{aligned}
 ```
-with genetic effects ``\\mathbf{u} = [u_1' \\; u_2']' \\sim N(0, G_0 \\otimes A)`` and
-residuals ``\\mathbf{e} \\sim N(0, R_0 \\otimes I)``, where:
+with sire transmitting abilities ``u = [u_1';\\ u_2']' \\sim N(0, G_0 \\otimes A)`` and
+residuals ``e \\sim N(0, R_0 \\otimes I)``, where:
 ```math
 G_0 = \\begin{bmatrix} \\sigma_{u_1}^2 & \\sigma_{u_{12}} \\\\ \\sigma_{u_{12}} &
     \\sigma_{u_2}^2 \\end{bmatrix}, \\quad
 R_0 = \\begin{bmatrix} \\sigma_{e_1}^2 & \\sigma_{e_{12}} \\\\ \\sigma_{e_{12}} & 1
     \\end{bmatrix}
 ```
-(residual variance of liability is set to 1 for identifiability).
+(the residual variance of liability is fixed to 1 for identifiability).
 
-# Conditional Liability
-Conditioning liability ``l`` on observed continuous performance ``y``:
+Conditioning the liability ``\\ell`` on the observed birth weight ``y`` gives:
 ```math
-l \\mid y = X_2 \\beta_2 + Z_2 u_2 + \\beta (y - X_1 \\beta_1 - Z_1 u_1) + e_{2\\mid 1}
+\\ell \\mid y = X_2 b_2 + Z_2 u_2 + \\beta (y - X_1 b_1 - Z_1 u_1) + e_{2\\mid 1}
 = X_2 \\tau + Z_2 \\nu + \\beta (y - \\bar{y}) + e_{2\\mid 1}
 ```
 where:
--  ``\\beta = \\sigma_{e_{12}} / \\sigma_{e_1}^2`` is the residual regression of liability
-  on BW.
--  ``\\sigma_{e_{2\\mid 1}}^2 = 1 - \\beta^2 \\sigma_{e_1}^2`` is the residual variance of
-  conditional liability.
--  ``\\tau`` and ``\\nu = u_2 - \\beta u_1`` are the fixed and sire effects on the
+- ``\\beta = \\sigma_{e_{12}} / \\sigma_{e_1}^2`` is the residual regression of liability on
+  BW.
+- ``\\sigma_{e_{2\\mid 1}}^2 = 1 - \\beta^2 \\sigma_{e_1}^2`` is the conditional residual
+  variance of liability.
+- ``\\tau`` and ``\\nu = u_2 - \\beta u_1`` are the reparameterized fixed and sire effects on
   conditional liability, with BW centred on its mean ``\\bar{y} = 43.02``.
 
-# Estimation & Probability of Difficult Calving
-Joint iterative estimation solves for ``(\\beta_1, u_1)`` and ``(\\tau, \\nu)`` on the
-liability scale. For a specific profile (origin 2, season 1, male calf) with sire ``j``, the
-probability of calving difficulty is:
-```math
-P(\\text{difficult} \\mid \\text{profile}, \\text{sire } j) =
-    \\Phi\\left(\\tau_{\\text{profile}} + \\nu_j + \\beta(b_{1, \\text{profile}} -
-    \\bar{y})\\right)
-```
-
-# Linear Approximation (Section 15.3)
-Treats binary scores as continuous in a standard bivariate linear mixed model via MME.
-
-# Tables
-The 47 calvings are one table (sire, origin, season, sex, BW, CD). The sire solutions
-of the threshold-linear model, the probabilities of difficult calving and the solutions
-of the bivariate linear model are collected in a table of sires. The linear model's MME
-are those of Example 6.1 with sire effects, written out with `kron` and compared with
-`mme`.
+# Key Concepts Illustrated
+1. **Calving records and sire summary tables**: All 47 calvings (sire, origin, season, sex,
+   BW, and binary CD) are kept in a `DataFrame` (`rec`), and the sire solutions and predicted
+   probabilities of difficult calving from both models are collected in a `sires` table.
+2. **Joint threshold–linear estimation and probability of difficult calving**: Solving
+   iteratively via `joint_binary_quantitative` yields ``(\\hat{b}_1, \\hat{u}_1)`` for BW and
+   ``(\\hat{\\tau}, \\hat{\\nu})`` on the conditional liability scale, from which the total
+   sire effect on liability is ``\\hat{u}_2 = \\hat{\\nu} + \\hat{\\beta}\\hat{u}_1``. For a
+   specific subclass (origin 2, season 1, male calf) and sire ``j``, the probability of a
+   difficult calving is
+   ``\\Phi\\!\\left(\\hat{\\tau}_{\\text{sub}} + \\hat{\\nu}_j + \\hat{\\beta}(\\hat{b}_{1,\\text{sub}} - \\bar{y})\\right)``.
+3. **Bivariate linear model approximation**: Treating the ``0/1`` calving difficulty score as
+   a continuous trait gives the standard bivariate MME of [`ex_06_1`](@ref) with sire
+   effects, ``[R_0^{-1} \\otimes X'X\\ R_0^{-1} \\otimes X'Z;\\ R_0^{-1} \\otimes Z'X\\
+   R_0^{-1} \\otimes Z'Z + G_0^{-1} \\otimes A^{-1}]``, written out with `kron` and verified
+   against `mme`.
 
 # Returns
 A `JointBinaryResult` with the BW solutions `b1` (fixed) and `u1` (sires), the
 liability-scale solutions `τ` (fixed) and `ν` (sires), the residual regression `β`, the
-number of iterations and the iteration history.
+number of iterations `iterations`, and `history`.
 """
 function ex_15_2()
     println("Example 15.2: birth weight and calving difficulty")

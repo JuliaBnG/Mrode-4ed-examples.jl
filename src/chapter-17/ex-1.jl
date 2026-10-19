@@ -1,68 +1,59 @@
 """
     ex_17_1() -> NamedTuple
 
-Run Sections 17.3 and 17.5 from Mrode & Pocrnic (2023): Estimation of variance components
-in a sire model using Henderson's Method 3 and canonical sums of squares
-(Ordinary Least Squares and iterated Generalized Least Squares).
+Sections 17.3 and 17.5: Variance components of a sire model by Henderson's Method 3 and by
+fitting canonical sums of squares (Mrode & Pocrnic, 2023, Sections 17.3 and 17.5; Henderson,
+1953).
 
-# Henderson's Method 3 (Section 17.3)
-For the sire model:
-```math
-\\mathbf{y} = X\\mathbf{b} + Z\\mathbf{s} + \\mathbf{e}
-```
-with ``\\mathrm{Var}(\\mathbf{s}) = I \\sigma_s^2`` and
-``\\mathrm{Var}(\\mathbf{e}) = I \\sigma_e^2``. Reductions in sums of squares are computed
-as:
-- Fixed-effects reduction: ``R(\\mathbf{b}) = \\mathbf{y}' X (X'X)^- X' \\mathbf{y} = F``
--  Full-model reduction:
-  ``R(\\mathbf{b}, \\mathbf{s}) = \\hat{\\mathbf{b}}' X' \\mathbf{y} + \\hat{\\mathbf{s}}'
-  Z' \\mathbf{y} = F + S``
--  Sire sum of squares adjusted for fixed effects:
-  ``R(\\mathbf{s} \\mid \\mathbf{b}) = R(\\mathbf{b}, \\mathbf{s}) - R(\\mathbf{b}) = S``
--  Residual sum of squares:
-  ``\\mathrm{SSE} = \\mathbf{y}' \\mathbf{y} - R(\\mathbf{b}, \\mathbf{s}) = R``
+# Model Formulation
+For the sire model ``y = Xb + Zs + e`` with ``\\mathrm{var}(s) = I \\sigma_s^2`` and
+``\\mathrm{var}(e) = I \\sigma_e^2``:
+1. **Henderson's Method 3** (Section 17.3) equates reductions in sums of squares to their
+   expectations:
+   - Fixed-effects reduction: ``R(b) = y' X (X'X)^- X' y = F``.
+   - Full-model reduction: ``R(b, s) = \\hat{b}' X' y + \\hat{s}' Z' y = F + S``.
+   - Sire sum of squares adjusted for fixed effects: ``S = R(b, s) - R(b)``.
+   - Residual sum of squares: ``R = y'y - R(b, s)``.
+   With ``S_X = I - X (X'X)^- X'``, the expectations are
+   ``\\mathrm{E}(R) = (N - r(X, Z)) \\sigma_e^2`` and
+   ``\\mathrm{E}(S) = \\mathrm{tr}(Z' S_X Z) \\sigma_s^2 + (r(X, Z) - r(X)) \\sigma_e^2``,
+   giving unbiased estimators:
+   ```math
+   \\hat{\\sigma}_e^2 = \\frac{R}{N - r(X, Z)}, \\quad
+   \\hat{\\sigma}_s^2 = \\frac{S - (r(X, Z) - r(X)) \\hat{\\sigma}_e^2}{\\mathrm{tr}(Z' S_X Z)}.
+   ```
+2. **Canonical Sums of Squares** (Section 17.5) Diagonalizing ``Z' S_X Z`` forms orthogonal
+   sire contrasts ``Q's`` with eigenvalues ``w_i`` and independent mean squares
+   ``\\mathrm{E}(\\mathrm{MS}_i) = \\sigma_e^2 + w_i \\sigma_s^2``, along with
+   ``\\mathrm{E}(\\mathrm{MS}_e) = \\sigma_e^2``. Writing ``\\mathrm{MS} = C\\theta +
+   \\epsilon`` with ``\\theta = [\\sigma_e^2;\\ \\sigma_s^2]``:
+   - **OLS**: ``\\hat{\\theta} = (C'C)^{-1} C' \\mathrm{MS}``.
+   - **Iterated GLS**: ``\\hat{\\theta} = (C' V^{-1} C)^{-1} C' V^{-1} \\mathrm{MS}`` with
+     ``V = \\mathrm{diag}\\!\\left(2\\,\\mathrm{E}(\\mathrm{MS}_i)^2 / \\nu_i\\right)`` updated at
+     each iterate.
 
-Equating quadratic forms to their expectations:
-```math
-\\begin{aligned}
-\\mathbb{E}[R] &= (N - r(X, Z)) \\sigma_e^2 \\\\
-\\mathbb{E}[S] &= \\mathrm{tr}(Z' S_X Z) \\sigma_s^2 + (r(X, Z) - r(X)) \\sigma_e^2
-\\end{aligned}
-```
-where ``S_X = I - X (X'X)^- X'``. Unbiased estimates are:
-```math
-\\hat{\\sigma}_e^2 = \\frac{R}{N - r(X, Z)}, \\quad
-\\hat{\\sigma}_s^2 = \\frac{S - (r(X, Z) - r(X)) \\hat{\\sigma}_e^2}{\\mathrm{tr}(Z' S_X Z)}
-```
+# Key Concepts Illustrated
+1. **Method 3 written out from projections**: We compute ``R(b)`` and ``R(b, s)`` directly
+   using `pinv`, evaluate ``\\mathrm{tr}(Z' S_X Z)``, and verify the reductions and variance
+   estimates against `henderson3`.
+2. **OLS and iterated GLS written out**: From the canonical sire contrasts (`sire_contrasts`),
+   OLS is simply `C \\ ms`, and iterated GLS is a 3-line loop updating the diagonal weight
+   matrix ``V^{-1}``; both are checked against `fit_mean_squares`, and the estimates of all
+   three methods are compared in a table `est`.
 
-# Canonical Sums of Squares & GLS (Section 17.5)
-Constructs mutually orthogonal sire contrasts ``Q' \\mathbf{s}`` with eigenvalues ``w_i``:
-```math
-\\mathbb{E}[\\mathrm{MS}_i] = \\sigma_e^2 + w_i \\sigma_s^2, \\quad
-    \\mathbb{E}[\\mathrm{MS}_e] = \\sigma_e^2
-```
-Written in regression form
-``\\mathbf{MS} = C \\boldsymbol{\\theta} + \\boldsymbol{\\epsilon}`` with
-``\\boldsymbol{\\theta} = [\\sigma_e^2 \\; \\sigma_s^2]'``:
-- **OLS**: ``\\hat{\\boldsymbol{\\theta}} = (C'C)^{-1} C' \\mathbf{MS}``
--  **Iterated GLS**:
-  ``\\hat{\\boldsymbol{\\theta}} = (C' V^{-1} C)^{-1} C' V^{-1} \\mathbf{MS}`` where
-  ``V = 2 \\,\\mathrm{diag}\\left(\\frac{(\\mathbb{E}[\\mathrm{MS}_i])^2}{\\nu_i}\\right)``,
-  iterated until convergence.
-
-# Written Out
-Method 3 is computed from the reductions ``R(\\mathbf{b})`` and ``R(\\mathbf{b}, \\mathbf{s})``
-and compared with `henderson3`; OLS is `C \\ ms` and the GLS iteration a three-line loop,
-compared with `fit_mean_squares`. The estimates of the three methods are collected in a
-table.
+# Notes on Text Discrepancies
+In Section 17.5, the book prints 0.143 and 0.079 for the unweighted OLS fit (exact OLS on the
+three mean squares gives 0.151 and 0.062), and prints 0.216 and 0.234 for the "estimated
+variances" (here the asymptotic sampling variances are 0.051 and 0.062, with standard errors
+0.226 and 0.250). The iterated GLS estimates (0.163, 0.047) match the book.
 
 # Returns
 A `NamedTuple` with fields:
-- `h`: Henderson's method 3 (reductions, degrees of freedom and estimates).
-- `c`: Canonical sire contrasts (sums of squares, eigenvalues ``w_i``, residual).
-- `θ`: OLS fit ``(\\hat\\sigma_e^2, \\hat\\sigma_s^2)`` to the mean squares.
-- `θw`: Iterated GLS fit ``(\\hat\\sigma_e^2, \\hat\\sigma_s^2)``.
-- `est`: Table of the estimates of the three methods.
+- `h`: Henderson's Method 3 result (`F`, `S`, `R`, `ZSZ`, `σ²e`, `σ²s`).
+- `c`: Canonical sire contrasts (`ss`, eigenvalues `w`, `Q`, residual `R` and `dfR`).
+- `θ`: OLS fit ``(\\hat{\\sigma}_e^2, \\hat{\\sigma}_s^2)`` to the canonical mean squares.
+- `θw`: Iterated GLS fit ``(\\hat{\\sigma}_e^2, \\hat{\\sigma}_s^2)``.
+- `est`: Table comparing the estimates of the three methods.
 """
 function ex_17_1()
     println("Sections 17.3 and 17.5: variance components of a sire model")

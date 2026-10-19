@@ -57,27 +57,37 @@ purebred lines.
    constructed using breed-specific allele frequencies ``f^{(1)}`` and ``f^{(2)}`` (Eqn
    14.25).
 
+# Key Concepts Illustrated
+1. **One table for purebred and crossbred animals**: All 12 animals (4 purebred breed 1,
+   4 purebred breed 2, and 4 F1 crossbreds) are kept in `animals` with their breed group,
+   herd, and phenotype; the purebred (`u1`, `u2`) and crossbred (`uc1`, `uc2`) breeding
+   values from both the pedigree and genomic BOA models are added as columns.
+2. **Heterogeneous residuals and the general ``R^{-1}`` MME**: In a reduced model where
+   crossbred Mendelian sampling is absorbed into the residual, crossbred records have a
+   larger residual variance (``\\sigma_x^2 = 4.75``) than purebred records
+   (``\\sigma_e^2 = 4.0``). We therefore write the MME in the general form
+   ``[X'R^{-1}X\\ X'R^{-1}W;\\ W'R^{-1}X\\ W'R^{-1}W + \\Sigma]``, with
+   ``W = [Z_1\\ Z_{x1}\\ Z_2\\ Z_{x2}]`` (where ``Z_{xp}`` has ``1/2`` in the column of the
+   crossbred's breed-``p`` parent) and ``\\Sigma = \\mathrm{blockdiag}(S_1^{-1} \\otimes
+   K_1^{-1},\\, S_2^{-1} \\otimes K_2^{-1})``, and verify it against `mme`.
+3. **Genomic breed-of-origin matrix ``G^{(p)}``** (Eqn 14.25): Built from centred purebred
+   genotypes ``Z_p = M_p - 2f_p'`` and phased crossbred breed-``p`` alleles
+   ``W_p = Q_p - f_p'`` as ``G^{(p)} = [Z_p;\\ W_p][Z_p;\\ W_p]' / 2\\sum f_j(1 - f_j)``.
+
 # Notes on Text Discrepancies
 1. Example 14.3: Solutions agree with Table 14.5 within 0.005. The code here yields exact
-   symmetry for exchangeable founders (e.g. ±0.057 for animals 1 and 2), whereas the book
-   has a slight numerical asymmetry (-0.060, 0.055).
-2.  Example 14.4: The ``G^{(1)}`` matrix printed in the book does not match Eqn 14.25
-   (prints ``g_{11} = 1.815`` instead of ``0.607``), but Table 14.9 follows Eqn 14.25
-   exactly and is reproduced here.
-
-# Tables and MME
-The animals are kept in one table with their breed group, herd and record; the
-purebred and crossbred solutions of both models are added as columns. Crossbred records
-have their own residual variance ``\\sigma_x^2``, so the MME are in the general ``R^{-1}``
-form with ``W = [Z_1\\ Z_{x1}\\ Z_2\\ Z_{x2}]`` and ``S_p^{-1} \\otimes K_p^{-1}`` per breed;
-they are written out in `boa` and compared with `mme`.
+   symmetry for exchangeable founders (e.g. ``\\pm 0.057`` for animals 1 and 2), whereas the
+   book has a slight rounding asymmetry (``-0.060``, ``0.055``).
+2. Example 14.4: The ``G^{(1)}`` matrix printed in the book does not match Eqn 14.25 (prints
+   ``g_{11} = 1.815`` instead of ``0.607``), but Table 14.9 follows Eqn 14.25 exactly and is
+   reproduced here.
 
 # Returns
 A `NamedTuple` with fields:
-- `animals`: The animals with pedigree (`u1`, `uc1`, `u2`, `uc2`) and genomic
-  (`gu1`, `guc1`, `gu2`, `guc2`) solutions added.
-- `r`: Results from pedigree BOA model (Example 14.3).
-- `s`: Results from genomic BOA model (Example 14.4).
+- `animals`: The animal table with pedigree (`u1`, `uc1`, `u2`, `uc2`) and genomic (`gu1`,
+  `guc1`, `gu2`, `guc2`) BOA solutions added.
+- `r`: Results from the pedigree BOA model (Example 14.3).
+- `s`: Results from the genomic BOA model (Example 14.4).
 """
 function ex_14_3()
     println("Example 14.3: breed of origin of alleles, pedigree")

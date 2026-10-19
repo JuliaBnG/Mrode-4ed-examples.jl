@@ -20,18 +20,20 @@ where:
   ``\\sigma_e^2 = 3.710``.
 
 # Key Concepts Illustrated
-1. **Tables**: Table 10.1 is typed as in the book (one column per cow) and
-   stacked to one row per test day; daily and 305-day EBV, pe, YD and the
-   partition weights are added as columns of the pedigree.
-2. **MME** as ``T'T + \\Sigma`` with ``T = [X_1\\ X_2\\ Z\\ Q]``, where row ``i`` of
-   ``X_2`` is the row of ``\\Phi`` for the DIM of record ``i``; compared with `mme`.
-3.  **Legendre Polynomials for Lactation Curves**: Orthogonal polynomials over standardised
-   intervals.
-4.  **Fixed Regression Test-Day Model**: A single average curve fitted to all cows, with
-   constant daily breeding values and permanent environment.
+1. **Data and Result Tables**: Table 10.1 is entered as in the book (one column per cow)
+   and stacked with `stack` to one row per test day. Daily and 305-day EBVs, permanent
+   environmental effects, yield deviations, and partition weights are added as columns of
+   the pedigree `DataFrame`.
+2. **MME Formulation**: Assembled as ``T'T + \\Sigma`` with ``T = [X_1\\ X_2\\ Z\\ Q]``, where
+   row ``i`` of ``X_2`` is the row of ``\\Phi`` for the DIM of record ``i``, and verified
+   against `mme`.
+3. **Legendre Polynomials for Lactation Curves**: Orthogonal polynomials evaluated over
+   standardized days in milk.
+4. **Fixed Regression Test-Day Model**: Fits a single average population curve to all cows,
+   with constant daily breeding values and permanent environmental effects per cow.
 5. **305-Day Genetic Evaluations**: Daily EBV scaled by 305 days.
 6. **Decomposition of EBVs**: Partition into Parent Average (PA) and Yield Deviation (YD)
-   adjusted for HTD, curve, and permanent environment.
+   adjusted for HTD, lactation curve, and permanent environment.
 
 # Note on Text Discrepancy
 The book's printed values for the fixed lactation curve from DIM 174 on (11.0407, 10.9156,

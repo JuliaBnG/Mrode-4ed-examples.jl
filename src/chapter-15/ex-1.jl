@@ -27,16 +27,30 @@ where:
   `threshold_model`).
 - Category probabilities by sire subclass are computed with `category_probabilities`.
 
-# Tables
-The data are one row per herd–sex–sire subclass with the counts of the three categories;
-for the linear model they are expanded to one row per calving with `stack` and row
-repetition. Sire solutions, standard errors, category probabilities (written out as
-``\\Phi(t_k - \\eta) - \\Phi(t_{k-1} - \\eta)`` and compared with `category_probabilities`)
-and the linear-model solutions are collected in a table of sires.
+# Key Concepts Illustrated
+1. **Subclass counts vs individual calving records**: The data in Table 15.2 are entered as a
+   `DataFrame` with one row per herd–sex–sire subclass and the counts (`n1`, `n2`, `n3`) in
+   each calving-ease category. For the linear sire model comparison, we expand the subclass
+   counts to one row per calving using `stack` and row repetition.
+2. **Fisher scoring on the liability scale**: Thresholds ``t = [t_1, t_2]``, fixed herd and
+   sex effects ``b``, and sire transmitting abilities ``u`` are estimated jointly via
+   `threshold_model` (with herd 1 and male constrained to zero), and asymptotic standard
+   errors are obtained from the inverse information matrix.
+3. **Translating liability solutions back to the probability scale**: Because ``\\hat{u}`` is
+   on the underlying standard-normal liability scale, we compute the predicted probability of
+   each calving-ease category for a given sire as
+   ``P_k = \\Phi(t_k - \\eta) - \\Phi(t_{k-1} - \\eta)`` (checked against
+   `category_probabilities`), both for a specific subclass (female calves in herd 1) and
+   averaged across all four herd × sex subclasses. All sire solutions and probabilities are
+   collected in a `sires` table.
+
+# Note on Text Discrepancy
+The linear-model column in Table 15.3 of the book cannot be reproduced from the category
+counts in Table 15.2, and sire 4's category probabilities in the book differ by 0.003.
 
 # Returns
 A `ThresholdResult` object containing converged thresholds `t`, fixed effects `b`, sire
-effects `u`, and iteration history.
+effects `u`, coefficient matrix `lhs`, iteration count `iterations`, and `history`.
 """
 function ex_15_1()
     println("Example 15.1: threshold model for calving ease")

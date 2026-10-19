@@ -1,25 +1,67 @@
 # Mrode4edExamples.jl
 
-*Julia solutions and verified numerical reproductions for worked examples in quantitative genetics and animal breeding.*
+*Worked examples in animal breeding and quantitative genetics, written
+step by step in Julia.*
 
-`Mrode4edExamples.jl` provides comprehensive, reproducible Julia implementations of the worked examples from:
+`Mrode4edExamples.jl` is a companion package to the textbook:
 
 > **Mrode, R. A., & Pocrnic, T. (2023).**  
-> *Linear Models for the Prediction of the Genetic Merit of Animals* (4th ed.).  
+> *Linear Models for the Prediction of the Genetic Merit of Animals*
+> (4th ed.).  
 > CABI Publishing, Wallingford, UK.
 
-The package is built upon the core **[JuliaBnG](https://github.com/JuliaBnG)** ecosystem:
-- **[Breeding.jl](https://github.com/JuliaBnG/Breeding.jl)**: General sparse mixed model equations (MME) solver, genomic prediction engines (BayesA/B/C/Cπ), threshold and non-linear generalized linear models, variance component estimation (Henderson Method 3, EM-REML, AI-REML), Gibbs samplers, and iteration on data (IOD / PCG).
-- **[RelationshipMatrices.jl](https://github.com/JuliaBnG/RelationshipMatrices.jl)**: Fast pedigree-based relationship inverses ($A^{-1}$) with unknown parent groups (QP) and sire–MGS pedigrees, genomic relationship matrices ($G$), single-step inverse ($H^{-1}$), APY ($G^{-1}$), dominance relationship matrices ($D$), epistasis, and breed-of-origin matrices.
+It is written for students learning linear mixed models and genomic
+prediction, and for instructors teaching from Mrode & Pocrnic (2023).
+The worked examples of Chapters 4–6, 8–15, and 17–19 are self-contained
+Julia functions (one function may cover several closely related
+examples). Each sets up the data in a `DataFrame`, writes out the Mixed
+Model Equations (MME) or the key algorithm and intermediate matrices in
+readable Julia notation, checks them against the general routines in
+the **[JuliaBnG](https://github.com/JuliaBnG)** packages, and verifies
+the numerical results against the tables printed in the book:
+
+- **[RelationshipMatrices.jl](https://github.com/JuliaBnG/RelationshipMatrices.jl)**:
+  Pedigree numerator relationship matrix $A$ and its inverse $A^{-1}$
+  (including unknown parent groups and sire–MGS pedigrees), genetic
+  group contributions $Q$, genomic relationship matrix $G$, single-step
+  inverse $H^{-1}$, APY inverse $G_{\mathrm{APY}}^{-1}$, tuning of $G$
+  to $A_{22}$, pedigree and genomic dominance $D$, epistatic $G_{AA}$,
+  and breed-specific partial relationship matrices.
+- **[Breeding.jl](https://github.com/JuliaBnG/Breeding.jl)**: General
+  sparse MME assembly and solvers, prediction error variances,
+  reliabilities and EBV partitions, genomic prediction (SNP-BLUP,
+  GBLUP, BayesA/B/C/C$\pi$), threshold and joint binary–quantitative
+  models, variance component estimation (Henderson's Method 3, EM-REML,
+  AI-REML), Gibbs samplers, covariance functions, and iterative solvers
+  (Jacobi, Gauss–Seidel, iteration on data, and matrix-free PCG).
 
 ---
 
-## Key Features
+## Highlights
 
-- **42 Worked Examples Across 14 Chapters**: Complete coverage of univariate, multivariate, maternal, social interaction, random regression, genomic, crossbreeding, threshold, variance-component, Bayesian, and iterative methods.
-- **303 Exact Numerical Verifications**: Every example includes automated checks verifying computed estimates against book tables and textbook formulas.
-- **Documented Corrections & Typo Analysis**: Transparently catalogues and resolves typographical slips, rounding discrepancies, and sign inconsistencies present in the 4th edition text.
-- **Instructional & Research-Ready**: Serves as both a reference standard for students and a benchmark testbed for statistical geneticists.
+- **42 Worked Examples Across 14 Chapters**: Covers animal, sire, and
+  reduced animal models, unknown parent groups, repeatability and
+  litter models, multivariate models and MACE, maternal and social
+  interaction models, random regression and covariance functions,
+  genomic selection and the Bayesian alphabet, single-step GBLUP and
+  APY, dominance and epistasis, crossbreeding and breed of origin of
+  alleles, threshold models, REML, Gibbs sampling, and iteration on
+  data.
+- **Written for Students**: Rather than hiding the algebra behind a
+  black-box solver, each script that solves MME first writes them out
+  explicitly as a Julia block matrix (`[X'X X'Z; Z'X Z'Z + λ * Ai]`,
+  `[X'Ri*X X'Ri*W; ...]`, Kronecker forms, or $T'T + \Sigma$) and
+  compares it with `mme(...)`. Pedigrees, phenotypes, and solutions are
+  stored together in `DataFrame`s so you can inspect data and
+  predictions side by side.
+- **392 Automated Numerical Checks**: The examples verify both the
+  equivalence of the hand-written equations or algorithms with the
+  library routines and the agreement of the solutions with the numbers
+  printed in the textbook.
+- **Documented Textbook Errata**: Where a printed table in the 4th
+  edition contains a typographical or arithmetic slip, the example
+  explains the discrepancy and checks the corrected value (see
+  [Textbook Discrepancies](manual/discrepancies.md)).
 
 ---
 
@@ -30,44 +72,51 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaBnG/Mrode-4ed-examples.jl")
 ```
 
-The package depends on `Breeding.jl` and `RelationshipMatrices.jl`.
-
 ---
 
-## Quick Example
+## Quick Start
 
 ```julia
 using Mrode4edExamples
 
-# Run a specific example (e.g. Chapter 4, Example 4.1: Univariate Animal Model)
+# Run Chapter 4, Example 4.1 (Univariate Animal Model)
 res = ex_04_1()
 
-# Inspect fixed effects and EBVs
+# Inspect the pedigree table with records, EBVs, reliabilities, and PA/YD/PC
+res.ped
+
+# Inspect the fixed sex effects and breeding value vector
 res.b
 res.a
 ```
 
-To list all available examples or run batch verifications:
+To browse the catalogue or run chapters in batch:
 
 ```julia
-# View catalog of all examples
+# List all 42 examples with their chapter and title
 list_examples()
 
-# Run all examples in a chapter
+# Run all examples in Chapter 11
 run_examples(11)
 
-# Run entire test suite (all 42 examples and 303 checks)
+# Run the entire suite (42 examples, 392 checks) and print a summary
 run_examples(; quiet = true)
 ```
 
 ---
 
-## Monograph & Ecosystem Navigation
+## JuliaBnG Ecosystem
 
-Part of the **JuliaBnG Monograph Series**:
-- **[BnGStructs.jl](https://juliabng.github.io/BnGStructs/)**: Foundational genomic data structures and bit-matrices.
-- **[FisherWright.jl](https://juliabng.github.io/FisherWright/)**: Forward-time population genetic simulations.
-- **[RelationshipMatrices.jl](https://juliabng.github.io/RelationshipMatrices/)**: Kinship and genomic relationship computing.
-- **[Breeding.jl](https://juliabng.github.io/Breeding/)**: Mixed linear models and genomic selection.
-- **[BnGsim.jl](https://juliabng.github.io/BnGsim/)**: Ecosystem orchestration and pipelines.
-- **[Mrode4edExamples.jl](https://juliabng.github.io/Mrode-4ed-examples/)**: Applied linear models and benchmark reproductions.
+`Mrode4edExamples.jl` is part of the **JuliaBnG** series:
+- **[BnGStructs.jl](https://juliabng.github.io/BnGStructs/)**: Genomic
+  data structures and bit-packed genotype arrays.
+- **[FisherWright.jl](https://juliabng.github.io/FisherWright/)**:
+  Forward-time population genetic simulations.
+- **[RelationshipMatrices.jl](https://juliabng.github.io/RelationshipMatrices/)**:
+  Pedigree and genomic relationship matrices and inverses.
+- **[Breeding.jl](https://juliabng.github.io/Breeding/)**: Linear mixed
+  models and genomic evaluation.
+- **[BnGsim.jl](https://juliabng.github.io/BnGsim/)**: Breeding program
+  simulation pipelines.
+- **[Mrode4edExamples.jl](https://juliabng.github.io/Mrode-4ed-examples/)**:
+  Worked textbook examples and numerical benchmarks.

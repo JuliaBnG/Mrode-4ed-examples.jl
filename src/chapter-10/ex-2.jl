@@ -20,26 +20,26 @@ where:
 - Residual variance: ``\\sigma_e^2 = 3.710``.
 
 # Key Concepts Illustrated
-1. **Tables**: the test-day records of Example 10.1, one row per test day;
-   regression coefficients, 305-day values and reliabilities are added as
-   columns of the pedigree.
+1. **Data and Result Tables**: Uses the test-day records of Example 10.1 (one row per test
+   day); random regression coefficients, 305-day values, and reliabilities are added as
+   columns of the pedigree `DataFrame`.
 2. **Random Regression Design Matrices**: Constructed with diagonal covariable weights
-   `Diagonal(ϕ[:, c]) * Z`. The MME are those of Example 10.1, ``T'T + \\Sigma``,
-   with ``Z_{RR} = [\\mathrm{Diag}(\\phi_0)Z\\ \\mathrm{Diag}(\\phi_1)Z\\
-   \\mathrm{Diag}(\\phi_2)Z]`` in place of ``Z`` and ``\\sigma_e^2 G^{-1} \\otimes A^{-1}``
-   in place of ``\\lambda_a A^{-1}`` (likewise for pe); compared with `mme`.
-3. **305-Day Breeding Values and PE**: Summed across lactation days:
+   `Diagonal(ϕ[:, c]) * Z`. The MME follow the ``T'T + \\Sigma`` form of Example 10.1 with
+   ``Z_{RR} = [\\mathrm{Diag}(\\phi_0)Z\\ \\mathrm{Diag}(\\phi_1)Z\\ \\mathrm{Diag}(\\phi_2)Z]`` in
+   place of ``Z`` and ``\\sigma_e^2 G^{-1} \\otimes A^{-1}`` in place of ``\\lambda_a A^{-1}``
+   (and similarly for PE), verified against `mme`.
+3. **305-Day Breeding Values and PE**: Summed across lactation days using
    ``t = \\sum_{d=6}^{310} \\phi(d)``, with ``\\mathrm{EBV}_{305} = u t``.
 4. **Reliability of Linear Functions of Random Regressions** (Section 10.3.4):
-   For evaluation ``k' u`` with ``k = t``:
+   For a linear function ``k' u`` with ``k = t``,
    ``\\mathrm{rel} = 1 - \\frac{t' C^{ii} t}{t' G t}``.
 5. **Decomposition of Random Regressions** (Section 10.3.2):
    Multi-trait partition into PA, YD, and PC across Legendre coefficients.
 
 # Notes on Text Discrepancies
-1.  Vector ``t``: The book sums Legendre polynomials built from 4-decimal rounded
+1. Vector ``t``: The book sums Legendre polynomials built from 4-decimal rounded
    coefficients, causing slight differences in ``t_3`` (-1.5561 vs -1.5451).
-2.  The quadratic form ``k' P k`` is printed as 323462.969; the book's own ``t`` and ``P``
+2. The quadratic form ``k' P k`` is printed as 323462.969; the book's own ``t`` and ``P``
    give 320126.
 
 # Returns

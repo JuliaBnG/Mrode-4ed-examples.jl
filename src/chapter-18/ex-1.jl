@@ -47,47 +47,52 @@ end
 """
     ex_18_1() -> NamedTuple
 
-Run Example 18.1 from Mrode & Pocrnic (2023): Gibbs sampling for a univariate animal model.
+Example 18.1: Gibbs sampling for a univariate animal model (Mrode & Pocrnic, 2023,
+Section 18.2; Wang et al., 1994).
 
-# Sampling Scheme
-For the animal model ``\\mathbf{y} = X\\mathbf{b} + Z\\mathbf{a} + \\mathbf{e}``:
-1. **Location parameters** ``\\boldsymbol{\\theta} = [\\mathbf{b}' \\; \\mathbf{a}']'``:
-   Fully conditional distributions are univariate normal:
+# Model Formulation
+For the univariate animal model ``y = Xb + Za + e`` with MME coefficient matrix ``C`` and
+right-hand side ``r`` (in the ``\\lambda = \\sigma_e^2/\\sigma_a^2`` form):
+1. **Location parameters** ``\\theta = [b;\\ a]``: Each unknown ``\\theta_i`` has a
+   univariate normal full conditional distribution given all other parameters
+   ``\\theta_{-i}``:
    ```math
-   \\theta_i \\mid \\boldsymbol{\\theta}_{-i}, \\mathbf{y}, \\sigma_e^2, \\sigma_a^2 \\sim
-       N(\\tilde{\\theta}_i, \\, C_{ii}^{-1} \\sigma_e^2)
+   \\theta_i \\mid \\theta_{-i}, y, \\sigma_e^2, \\sigma_a^2 \\sim
+       N\\!\\left(\\tilde{\\theta}_i,\\; \\frac{\\sigma_e^2}{C_{ii}}\\right), \\quad
+   \\tilde{\\theta}_i = \\frac{1}{C_{ii}}\\left(r_i - \\sum_{j \\neq i} C_{ij} \\theta_j\\right).
    ```
-   where ``\\tilde{\\theta}_i = C_{ii}^{-1} \\left(r_i - \\sum_{j \\neq i} C_{ij}
-   \\theta_j\\right)`` and ``C`` is the MME coefficient matrix.
-2. **Variance components**:
-   Under scaled inverse-``\\chi^2`` conjugate priors:
+2. **Variance components**: Under scaled inverse-``\\chi^2`` conjugate priors
+   ``(\\nu_a, S_a^2)`` and ``(\\nu_e, S_e^2)``, the full conditionals are:
    ```math
    \\begin{aligned}
-   \\sigma_a^2 \\mid \\mathbf{a} &\\sim \\text{Scale-Inv-}\\chi^2\\left(\\nu_a + q, \\;
-       \\frac{\\nu_a S_a^2 + \\mathbf{a}' A^{-1} \\mathbf{a}}{\\nu_a + q}\\right) \\\\
-   \\sigma_e^2 \\mid \\mathbf{e} &\\sim \\text{Scale-Inv-}\\chi^2\\left(\\nu_e + N, \\;
-       \\frac{\\nu_e S_e^2 + \\mathbf{e}' \\mathbf{e}}{\\nu_e + N}\\right)
+   \\sigma_a^2 \\mid a &\\sim \\chi^{-2}\\!\\left(\\nu_a + q, \\;
+       \\frac{\\nu_a S_a^2 + a' A^{-1} a}{\\nu_a + q}\\right), \\\\
+   \\sigma_e^2 \\mid e &\\sim \\chi^{-2}\\!\\left(\\nu_e + N, \\;
+       \\frac{\\nu_e S_e^2 + e' e}{\\nu_e + N}\\right).
    \\end{aligned}
    ```
 
-# Execution Steps
-- **Round 1 Replay**: Uses textbook random normal deviates to verify exact arithmetic.
--  **Fixed-Variance Verification**: Confirms that posterior means with variances fixed match
-  BLUP solutions.
--  **Full Chain**: Samples location and dispersion parameters with proper
-  inverse-``\\chi^2`` priors.
-
-# Written Out
-Round 1 is computed with an explicit loop of single-site updates and compared with
-`gibbs_sweep!`. The data are one table, one row per animal; BLUP and the posterior
-means of both chains are added as columns.
+# Key Concepts Illustrated
+1. **Round 1 written out as a single-site loop**: Using the 8-animal data table of
+   [`ex_04_1`](@ref), we write out one full sweep of single-site updates from ``\\theta = 0``
+   using the textbook's 10 standard normal deviates (`FixedNormals`) and verify that it
+   matches `gibbs_sweep!` and the book's Round 1 numbers.
+2. **Convergence of posterior means to BLUP when variances are fixed**: Running 8 independent
+   MCMC chains with ``\\sigma_a^2 = 20`` and ``\\sigma_e^2 = 40`` fixed confirms that the
+   posterior mean of ``\\theta`` equals the analytical MME solution ``C^{-1}r`` within Monte
+   Carlo standard error.
+3. **Full Gibbs sampling and proper priors**: With flat priors (``\\nu_e = \\nu_a = -2,
+   S^2 = 0``) and only 5 records, the joint posterior is improper near ``\\sigma_a^2 = 0``
+   and the chain is absorbed there; proper scaled inverse-``\\chi^2`` priors (``\\nu = 4``)
+   are used for the full chain, and all three sets of animal estimates (`blup`,
+   `gibbs_fixed`, `gibbs_full`) are compared side by side in `ped`.
 
 # Returns
 A `NamedTuple` with fields:
-- `x`: Location parameters after round 1 with the book's random numbers.
+- `x`: Location parameters after Round 1 using the book's random normal deviates.
 - `means`: Posterior means with variances fixed (one column per independent chain).
-- `f`: Full Gibbs chain (`GibbsResult`: posterior means and variance samples).
-- `ped`: The data with `blup`, `gibbs_fixed` and `gibbs_full` added.
+- `f`: Full Gibbs chain with variances sampled (`GibbsResult`).
+- `ped`: The data table with `blup`, `gibbs_fixed`, and `gibbs_full` added.
 """
 function ex_18_1()
     println("Example 18.1: Gibbs sampling, univariate animal model")

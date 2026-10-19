@@ -26,18 +26,18 @@ genetic covariance ``\\mathrm{var}(u) = G_0 \\otimes A``, and residual covarianc
   x_i'b_2 + u_{i,2} + \\frac{r_{12}}{r_{11}}(y_{i,1} - x_i'b_1 - u_{i,1}), \\;
   r_{22} - \\frac{r_{12}^2}{r_{11}}\\right),
   ```
-  restoring a complete ``N \\times t`` data matrix so that the complete-data MME and residual
-  sum-of-squares updates can be used directly.
+  restoring a complete ``N \\times t`` data matrix so that the complete-data MME and
+  residual sum-of-squares updates can be used directly.
 
 # Key Concepts Illustrated
-1. **Equivalence with multi-trait BLUP**: Using the 8-animal data table of [`ex_06_1`](@ref),
-   we run 8 independent chains with ``R_0`` and ``G_0`` fixed (`gibbs_mt`) and verify that
-   the posterior means converge to the exact bivariate BLUP solutions (stored side by side in
-   `ped`).
+1. **Equivalence with multi-trait BLUP**: Using the 8-animal data table of
+   [`ex_06_1`](@ref), we run 8 independent chains with ``R_0`` and ``G_0`` fixed
+   (`gibbs_mt`) and verify that the posterior means converge to the exact bivariate BLUP
+   solutions (stored side by side in `ped`).
 2. **Data augmentation in action**: Setting calf 4's PWG record to `missing`, we compute the
-   conditional normal distribution ``N(\\mu_{2\\mid 1}, \\sigma_{e_{2\\mid 1}}^2)`` explicitly
-   at the BLUP solutions and verify that the augmented Gibbs sampler converges to the
-   BLUP of the same data with calf 4's PWG missing (the missing-record pattern of
+   conditional normal distribution ``N(\\mu_{2\\mid 1}, \\sigma_{e_{2\\mid 1}}^2)``
+   explicitly at the BLUP solutions and verify that the augmented Gibbs sampler converges to
+   the BLUP of the same data with calf 4's PWG missing (the missing-record pattern of
    [`ex_06_2`](@ref)).
 3. **Sampling ``R_0`` and ``G_0``**: With proper inverse-Wishart priors (``\\nu = 10``)
    centred on ``R_0`` and ``G_0``, we compare prior and posterior covariance means in a
@@ -79,7 +79,8 @@ function ex_18_2()
     )
     b, (u,) = solutions(m, solve_mme(m))
 
-    # Step 3: Fixed (co)variances: verify posterior means converge to BLUP (8 independent chains)
+    # Step 3: Fixed (co)variances: verify posterior means converge to BLUP
+    #         (8 independent chains)
     chains(Yd, seed) = reduce(
         hcat,
         [

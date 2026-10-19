@@ -24,9 +24,10 @@ where ``R_i`` is the submatrix of ``R_0`` corresponding to the traits observed o
    traits and zeros elsewhere:
    ```math
    \\begin{bmatrix}
-   (I_2 \\otimes X)' R^{-1} (I_2 \\otimes X) & (I_2 \\otimes X)' R^{-1} (I_2 \\otimes Z) \\\\
+   (I_2 \\otimes X)' R^{-1} (I_2 \\otimes X) &
+       (I_2 \\otimes X)' R^{-1} (I_2 \\otimes Z) \\\\
    (I_2 \\otimes Z)' R^{-1} (I_2 \\otimes X) &
-   (I_2 \\otimes Z)' R^{-1} (I_2 \\otimes Z) + G_0^{-1} \\otimes A^{-1}
+       (I_2 \\otimes Z)' R^{-1} (I_2 \\otimes Z) + G_0^{-1} \\otimes A^{-1}
    \\end{bmatrix}.
    ```
    This form is written out explicitly and compared with `mt_stack`,

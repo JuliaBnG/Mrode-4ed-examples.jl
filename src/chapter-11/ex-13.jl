@@ -23,8 +23,8 @@ where:
 
 # Key Concepts Illustrated
 1. **Same MME as Example 6.1**, with ``Z = I`` and ``G`` in place of ``A``:
-   ``[R_0^{-1} \\otimes X'X\\ R_0^{-1} \\otimes X';\\ R_0^{-1} \\otimes X\\
-   R_0^{-1} \\otimes I + G_0^{-1} \\otimes G^{-1}]``, written out with `kron` and
+   ``[R_0^{-1} \\otimes X'X\\ R_0^{-1} \\otimes X';\\ R_0^{-1} \\otimes X\\ R_0^{-1}
+   \\otimes I + G_0^{-1} \\otimes G^{-1}]``, written out with `kron` and
    compared with `mme`.
 2. **Tables**: the calves with both traits; their DGV and, for comparison, the
    pedigree-based multi-trait EBV of Example 6.1 are added as columns.

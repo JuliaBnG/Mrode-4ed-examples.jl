@@ -25,8 +25,8 @@ where:
 
 # Key Concepts Illustrated
 1. **Every SNP is a trait with the same MME**:
-   ``[X'X\\ X'W;\\ W'X\\ W'W + \\lambda A^{-1}]\\,[\\mu';\\ D] = [X'M;\\ W'M]`` is solved for
-   all SNPs at once with a matrix right-hand side; compared with
+   ``[X'X\\ X'W;\\ W'X\\ W'W + \\lambda A^{-1}]\\,[\\mu';\\ D] = [X'M;\\ W'M]`` is solved
+   for all SNPs at once with a matrix right-hand side; compared with
    `base_allele_frequencies`.
 2. **Tables**: observed and predicted gene content of SNP 1 as columns of
    the pedigree; base allele frequencies next to the frequencies among the
@@ -37,7 +37,8 @@ A `NamedTuple` with fields:
 - `p`: Base allele frequencies for all 10 SNPs.
 - `μ`: Base population gene content expectations (``2 p``).
 - `d`: Matrix of BLUP gene content deviations for all 26 animals across 10 SNPs.
-- `ped`: The pedigree with `genotyped`, `snp1` (observed), `d1`, `q1` and `q1_rounded` added.
+- `ped`: The pedigree with `genotyped`, `snp1` (observed), `d1`, `q1` and `q1_rounded`
+  added.
 - `snps`: Base and genotyped-sample allele frequencies.
 - `Q`: Predicted gene content of all animals (26 × 10).
 """
@@ -126,7 +127,8 @@ function ex_11_6()
     )
 
     # 3. Compare with GLS estimator (Garcia-Baccino et al., 2017)
-    # Note: The book reports 0.575; the GLS estimator with (A₂₂)⁻¹ gives ~0.590, close to μ̂ = 0.597
+    # Note: The book reports 0.575; the GLS estimator with (A₂₂)⁻¹ gives ~0.590, close
+    # to μ̂ = 0.597
     o = ones(14)
     gls(K) = (o' * K * M[:, 1]) / (o' * K * o)
     @printf(

@@ -18,9 +18,9 @@ Three matrix-free solvers are demonstrated on the data of [`ex_04_1`](@ref) and
 [`ex_04_4`](@ref):
 1. **Gauss–Seidel IOD** (Example 19.3): Produces the exact same sequence of iterates as
    Gauss–Seidel on the assembled matrix ``C`` (Example 19.2).
-2. **Gauss–Seidel IOD with unknown parent groups** (Example 19.4): Replaces unknown sires and
-   dams by phantom groups 9 and 10; constraining group 9 to zero recovers the QP-transformed
-   solution of [`ex_04_4`](@ref).
+2. **Gauss–Seidel IOD with unknown parent groups** (Example 19.4): Replaces unknown sires
+   and dams by phantom groups 9 and 10; constraining group 9 to zero recovers the
+   QP-transformed solution of [`ex_04_4`](@ref).
 3. **Preconditioned Conjugate Gradient (PCG) on data** (Example 19.6): Solves ``Cx = b``
    using only the matrix-free product ``q_k = C p_k`` (`iod(q, p)`) and the diagonal
    preconditioner ``M = \\mathrm{diag}(C)``.
@@ -32,13 +32,14 @@ Three matrix-free solvers are demonstrated on the data of [`ex_04_1`](@ref) and
 2. **Matrix-free PCG written out as an explicit loop**: We write out the PCG recurrence
    (step length ``\\alpha_k = (r_k' z_k)/(p_k' C p_k)``, conjugate direction update
    ``\\beta_k = (r_{k+1}' z_{k+1})/(r_k' z_k)``) directly around `iod(q, pp)`, check it
-   against `pcg`, and compare the Gauss–Seidel IOD, PCG, and direct MME solutions in a table.
+   against `pcg`, and compare the Gauss–Seidel IOD, PCG, and direct MME solutions in a
+   table.
 
 # Notes on Text Discrepancies
 1. In Example 19.3, the column headed "At convergence" is round 20, whereas the stated
    ``10^{-7}`` criterion is already met at round 9.
-2. In Example 19.4, the constrained column printed in the book (`5.474 … -1.795`) has not yet
-   converged to the exact constrained solution of Example 4.4 (`5.458 … -1.769`).
+2. In Example 19.4, the constrained column printed in the book (`5.474 … -1.795`) has not
+   yet converged to the exact constrained solution of Example 4.4 (`5.458 … -1.769`).
 
 # Returns
 A `DataFrame` comparing the solutions (`effect`, `gauss_seidel_iod`, `pcg`, and `direct`).

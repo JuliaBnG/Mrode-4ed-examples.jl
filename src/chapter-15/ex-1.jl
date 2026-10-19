@@ -28,17 +28,17 @@ where:
 - Category probabilities by sire subclass are computed with `category_probabilities`.
 
 # Key Concepts Illustrated
-1. **Subclass counts vs individual calving records**: The data in Table 15.2 are entered as a
-   `DataFrame` with one row per herd–sex–sire subclass and the counts (`n1`, `n2`, `n3`) in
-   each calving-ease category. For the linear sire model comparison, we expand the subclass
-   counts to one row per calving using `stack` and row repetition.
+1. **Subclass counts vs individual calving records**: The data in Table 15.2 are entered as
+   a `DataFrame` with one row per herd–sex–sire subclass and the counts (`n1`, `n2`, `n3`)
+   in each calving-ease category. For the linear sire model comparison, we expand the
+   subclass counts to one row per calving using `stack` and row repetition.
 2. **Fisher scoring on the liability scale**: Thresholds ``t = [t_1, t_2]``, fixed herd and
    sex effects ``b``, and sire transmitting abilities ``u`` are estimated jointly via
    `threshold_model` (with herd 1 and male constrained to zero), and asymptotic standard
    errors are obtained from the inverse information matrix.
-3. **Translating liability solutions back to the probability scale**: Because ``\\hat{u}`` is
-   on the underlying standard-normal liability scale, we compute the predicted probability of
-   each calving-ease category for a given sire as
+3. **Translating liability solutions back to the probability scale**: Because ``\\hat{u}``
+   is on the underlying standard-normal liability scale, we compute the predicted
+   probability of each calving-ease category for a given sire as
    ``P_k = \\Phi(t_k - \\eta) - \\Phi(t_{k-1} - \\eta)`` (checked against
    `category_probabilities`), both for a specific subclass (female calves in herd 1) and
    averaged across all four herd × sex subclasses. All sire solutions and probabilities are

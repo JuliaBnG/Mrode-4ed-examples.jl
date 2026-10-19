@@ -22,10 +22,11 @@ where:
   number of random genetic equations.
 
 # Key Concepts Illustrated
-1. **One genetic effect**: the MME ``[X'X\\ X'Z;\\ Z'X\\ Z'Z + \\sigma_e^2 V^{-1}]`` are written
-   out and compared with `mme`; ``\\hat{a}`` and ``\\hat{d}`` are recovered from ``\\hat{g}``
-   and compared with the separate model of Example 13.1, fitted here.
-2. **Tables**: ``\\hat{g}``, ``\\hat{a}`` and ``\\hat{d}`` are added as columns of the pig table.
+1. **One genetic effect**: the MME ``[X'X\\ X'Z;\\ Z'X\\ Z'Z + \\sigma_e^2 V^{-1}]`` are
+   written out and compared with `mme`; ``\\hat{a}`` and ``\\hat{d}`` are recovered from
+   ``\\hat{g}`` and compared with the separate model of Example 13.1, fitted here.
+2. **Tables**: ``\\hat{g}``, ``\\hat{a}`` and ``\\hat{d}`` are added as columns of the pig
+   table.
 
 # Returns
 A `NamedTuple` with fields:

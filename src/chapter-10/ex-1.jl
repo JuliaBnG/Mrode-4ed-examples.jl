@@ -24,9 +24,9 @@ where:
    and stacked with `stack` to one row per test day. Daily and 305-day EBVs, permanent
    environmental effects, yield deviations, and partition weights are added as columns of
    the pedigree `DataFrame`.
-2. **MME Formulation**: Assembled as ``T'T + \\Sigma`` with ``T = [X_1\\ X_2\\ Z\\ Q]``, where
-   row ``i`` of ``X_2`` is the row of ``\\Phi`` for the DIM of record ``i``, and verified
-   against `mme`.
+2. **MME Formulation**: Assembled as ``T'T + \\Sigma`` with ``T = [X_1\\ X_2\\ Z\\ Q]``,
+   where row ``i`` of ``X_2`` is the row of ``\\Phi`` for the DIM of record ``i``, and
+   verified against `mme`.
 3. **Legendre Polynomials for Lactation Curves**: Orthogonal polynomials evaluated over
    standardized days in milk.
 4. **Fixed Regression Test-Day Model**: Fits a single average population curve to all cows,
@@ -43,7 +43,8 @@ here.
 
 # Returns
 A `NamedTuple` with fields:
-- `ped`: The pedigree with columns `ebv`, `ebv305`, `pe`, `n`, `YD`, `w_PA` and `w_YD` added.
+- `ped`: The pedigree with columns `ebv`, `ebv305`, `pe`, `n`, `YD`, `w_PA` and `w_YD`
+  added.
 - `rec`: The test-day records with the corrected yields `yc` added.
 - `curve`: The fixed lactation curve at the ten DIM.
 - `b`: Fixed effect solutions (HTD and Legendre curve coefficients).
@@ -140,7 +141,8 @@ function ex_10_1()
     check("pe (daily)", pe, [-0.6156, -0.4151, -1.6853, 2.8089, -0.0928]; atol = 1e-4)
 
     # 5. Fitted lactation curve: v = Φ b̂₂
-    # Note: the book's values from DIM 174 on are not Φ b̂₂; the verified values are checked here.
+    # Note: the book's values from DIM 174 on are not Φ b̂₂; the verified values are
+    # checked here.
     curve = DataFrame(DIM = dims, v = Φ * b[11:15])
     println("\nFixed lactation curve:")
     show_table(curve; digits = 4)

@@ -23,9 +23,9 @@ where:
 1. **Tables**: SNP effects in a table of SNPs (with allele frequencies), DGV
    as columns of the bull table; the genotypes stay a matrix.
 2. **MME in the general form**,
-   ``[\\mathbf{1}'R^{-1}\\mathbf{1}\\ \\mathbf{1}'R^{-1}Z;\\ Z'R^{-1}\\mathbf{1}\\ Z'R^{-1}Z + I/\\sigma_g^2]``,
-   unweighted and EDC-weighted as in Example 11.1; written out and compared
-   with `mme`.
+   ``[\\mathbf{1}'R^{-1}\\mathbf{1} \\quad \\mathbf{1}'R^{-1}Z; \\quad
+   Z'R^{-1}\\mathbf{1} \\quad Z'R^{-1}Z + I/\\sigma_g^2]``,
+   unweighted and EDC-weighted as in Example 11.1; written out and compared with `mme`.
 3. **Monomorphic SNPs**: SNPs 7 and 8 do not segregate among the reference
    bulls; their centred columns are confounded with the mean, so their
    effects are exactly zero.

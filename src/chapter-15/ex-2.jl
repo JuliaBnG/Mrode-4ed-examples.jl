@@ -33,25 +33,28 @@ where:
   BW.
 - ``\\sigma_{e_{2\\mid 1}}^2 = 1 - \\beta^2 \\sigma_{e_1}^2`` is the conditional residual
   variance of liability.
-- ``\\tau`` and ``\\nu = u_2 - \\beta u_1`` are the reparameterized fixed and sire effects on
-  conditional liability, with BW centred on its mean ``\\bar{y} = 43.02``.
+- ``\\tau`` and ``\\nu = u_2 - \\beta u_1`` are the reparameterized fixed and sire effects
+  on conditional liability, with BW centred on its mean ``\\bar{y} = 43.02``.
 
 # Key Concepts Illustrated
 1. **Calving records and sire summary tables**: All 47 calvings (sire, origin, season, sex,
-   BW, and binary CD) are kept in a `DataFrame` (`rec`), and the sire solutions and predicted
-   probabilities of difficult calving from both models are collected in a `sires` table.
+   BW, and binary CD) are kept in a `DataFrame` (`rec`), and the sire solutions and
+   predicted probabilities of difficult calving from both models are collected in a `sires`
+   table.
 2. **Joint threshold–linear estimation and probability of difficult calving**: Solving
-   iteratively via `joint_binary_quantitative` yields ``(\\hat{b}_1, \\hat{u}_1)`` for BW and
-   ``(\\hat{\\tau}, \\hat{\\nu})`` on the conditional liability scale, from which the total
-   sire effect on liability is ``\\hat{u}_2 = \\hat{\\nu} + \\hat{\\beta}\\hat{u}_1``. For a
-   specific subclass (origin 2, season 1, male calf) and sire ``j``, the probability of a
-   difficult calving is
-   ``\\Phi\\!\\left(\\hat{\\tau}_{\\text{sub}} + \\hat{\\nu}_j + \\hat{\\beta}(\\hat{b}_{1,\\text{sub}} - \\bar{y})\\right)``.
-3. **Bivariate linear model approximation**: Treating the ``0/1`` calving difficulty score as
-   a continuous trait gives the standard bivariate MME of [`ex_06_1`](@ref) with sire
-   effects, ``[R_0^{-1} \\otimes X'X\\ R_0^{-1} \\otimes X'Z;\\ R_0^{-1} \\otimes Z'X\\
-   R_0^{-1} \\otimes Z'Z + G_0^{-1} \\otimes A^{-1}]``, written out with `kron` and verified
-   against `mme`.
+   iteratively via `joint_binary_quantitative` yields ``(\\hat{b}_1, \\hat{u}_1)`` for BW
+   and ``(\\hat{\\tau}, \\hat{\\nu})`` on the conditional liability scale, from which the
+   total sire effect on liability is ``\\hat{u}_2 = \\hat{\\nu} + \\hat{\\beta}\\hat{u}_1``.
+   For a specific subclass (origin 2, season 1, male calf) and sire ``j``, the probability
+   of a difficult calving is
+   ``\\Phi\\!\\left(\\hat{\\tau}_{\\text{sub}} + \\hat{\\nu}_j +
+   \\hat{\\beta}(\\hat{b}_{1,\\text{sub}} - \\bar{y})\\right)``.
+3. **Bivariate linear model approximation**: Treating the ``0/1`` calving difficulty score
+   as a continuous trait gives the standard bivariate MME of [`ex_06_1`](@ref) with sire
+   effects,
+   ``[R_0^{-1} \\otimes X'X\\ R_0^{-1} \\otimes X'Z;\\ R_0^{-1} \\otimes Z'X\\ R_0^{-1}
+   \\otimes Z'Z + G_0^{-1} \\otimes A^{-1}]``,
+   written out with `kron` and verified against `mme`.
 
 # Returns
 A `JointBinaryResult` with the BW solutions `b1` (fixed) and `u1` (sires), the

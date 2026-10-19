@@ -26,8 +26,9 @@ where:
    groups.
 2. **Sire–MGS Model with Phantom Parent Groups**:
    Constructed via `ainv_smgs` with group equations stabilized.
-3. **Heterogeneous residuals**: ``R^{-1} = \\mathrm{diag}(\\mathrm{EDC}_{ik}/\\sigma_{ei}^2)``
-   differs for every proof, so the MME are in the general form
+3. **Heterogeneous residuals**:
+   ``R^{-1} = \\mathrm{diag}(\\mathrm{EDC}_{ik}/\\sigma_{ei}^2)`` differs for every proof,
+   so the MME are in the general form
    ```math
    \\begin{bmatrix}
    X'R^{-1}X & X'R^{-1}Z \\\\

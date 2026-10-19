@@ -33,8 +33,8 @@ where:
    marks records in the same pen; compared with
    `associate_incidence(pen, pig, N)`.
 3. **MME** (Eqn 9.6) as ``T'T + \\Sigma`` with ``T = [X\\ Z_D\\ Z_S\\ V\\ W]`` and
-   ``\\Sigma`` holding ``\\alpha \\otimes A^{-1}`` (``\\alpha = \\sigma_{e^*}^2 G_0^{-1}``) and the
-   variance ratios of the group and litter effects; compared with `mme`.
+   ``\\Sigma`` holding ``\\alpha \\otimes A^{-1}`` (``\\alpha = \\sigma_{e^*}^2 G_0^{-1}``)
+   and the variance ratios of the group and litter effects; compared with `mme`.
 4. **Comparison with Standard Animal Model**: Animal model ignoring associative effects.
 5. **Equivalence with Correlated Residuals Model** (Section 9.4): Instead of fitting an
    explicit random group effect ``g``, pen-mates have correlated residuals:

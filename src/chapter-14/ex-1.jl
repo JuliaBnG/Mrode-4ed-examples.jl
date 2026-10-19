@@ -45,8 +45,8 @@ In crossbred and admixed populations with breeds 1 and 2:
 
 # Note on Text Discrepancy
 In Example 14.2, Table 14.3 of the book lists the weighted breed contributions
-``\\sqrt{f_p}\\,\\hat{u}_p`` and ``\\sqrt{h_{12}}\\,\\hat{u}_{12}`` (which sum directly to the
-total breeding value ``\\hat{a}^*``) rather than the raw random-regression coefficients
+``\\sqrt{f_p}\\,\\hat{u}_p`` and ``\\sqrt{h_{12}}\\,\\hat{u}_{12}`` (which sum directly to
+the total breeding value ``\\hat{a}^*``) rather than the raw random-regression coefficients
 ``\\hat{u}_p``.
 
 # Returns

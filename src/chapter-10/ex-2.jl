@@ -25,9 +25,10 @@ where:
    columns of the pedigree `DataFrame`.
 2. **Random Regression Design Matrices**: Constructed with diagonal covariable weights
    `Diagonal(ϕ[:, c]) * Z`. The MME follow the ``T'T + \\Sigma`` form of Example 10.1 with
-   ``Z_{RR} = [\\mathrm{Diag}(\\phi_0)Z\\ \\mathrm{Diag}(\\phi_1)Z\\ \\mathrm{Diag}(\\phi_2)Z]`` in
-   place of ``Z`` and ``\\sigma_e^2 G^{-1} \\otimes A^{-1}`` in place of ``\\lambda_a A^{-1}``
-   (and similarly for PE), verified against `mme`.
+   ``Z_{RR} =
+   [\\mathrm{Diag}(\\phi_0)Z\\ \\mathrm{Diag}(\\phi_1)Z\\ \\mathrm{Diag}(\\phi_2)Z]``
+   in place of ``Z`` and ``\\sigma_e^2 G^{-1} \\otimes A^{-1}`` in place of
+   ``\\lambda_a A^{-1}`` (and similarly for PE), verified against `mme`.
 3. **305-Day Breeding Values and PE**: Summed across lactation days using
    ``t = \\sum_{d=6}^{310} \\phi(d)``, with ``\\mathrm{EBV}_{305} = u t``.
 4. **Reliability of Linear Functions of Random Regressions** (Section 10.3.4):

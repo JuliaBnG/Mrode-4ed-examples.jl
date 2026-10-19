@@ -24,8 +24,8 @@ where:
    the alleles and the dosage is the number of strands carrying each; compared
    with `pseudo_snps`. ``G_h = Z_hZ_h'/2\\sum pq`` from the centred pseudo-SNPs.
 2. **GBLUP** with ``W = I`` (one record per animal), MME
-   ``[n\\ \\mathbf{1}';\\ \\mathbf{1}\\ I + \\lambda K^{-1}]`` for each ``K``; written out and compared
-   with `mme`. The DGV of all three models are columns of a table of animals.
+   ``[n\\ \\mathbf{1}';\\ \\mathbf{1}\\ I + \\lambda K^{-1}]`` for each ``K``; written out
+   and compared with `mme`. The DGV of all three models are columns of a table of animals.
 
 # Notes on Text Discrepancies
 1.  The book prints animal 5's block-2 pseudo-SNPs as `01000`, although its haplotypes `001`

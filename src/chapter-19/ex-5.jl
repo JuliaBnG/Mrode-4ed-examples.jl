@@ -32,8 +32,8 @@ into ``e^*`` gives heterogeneous residual variances:
 
 # Note on Text Discrepancy
 The dataset is that of Table 8.1 ([`ex_08_1`](@ref) and [`ex_08_2`](@ref)), where the second
-fixed factor is called "Pen" (levels 1 and 2); in Example 19.5 the book labels those same two
-levels "Sex" (Male and Female). In addition, because Mrode's relative stopping criterion
+fixed factor is called "Pen" (levels 1 and 2); in Example 19.5 the book labels those same
+two levels "Sex" (Male and Female). In addition, because Mrode's relative stopping criterion
 divides by ``\\|x^{(k)}\\|^2`` (which is dominated by the herd means near 30), stopping at
 ``10^{-14}`` leaves errors of order ``10^{-5}`` in the random effects; we iterate to
 ``10^{-24}`` so that the random effects and cell means match [`ex_08_2`](@ref) to 8 decimal

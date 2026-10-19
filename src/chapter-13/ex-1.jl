@@ -27,8 +27,8 @@ where:
    breeding values and dominance deviations are added as columns.
 2. **``D`` by Cockerham's rule**, written out and compared with `drm`.
 3. **MME** as ``T'T + \\Sigma`` with ``T = [X\\ Z\\ Z]`` (the same ``Z`` for additive and
-   dominance effects) and ``\\Sigma`` holding ``\\lambda_a A^{-1}`` and ``\\lambda_d D^{-1}``;
-   compared with `mme`.
+   dominance effects) and ``\\Sigma`` holding ``\\lambda_a A^{-1}`` and
+   ``\\lambda_d D^{-1}``; compared with `mme`.
 
 # Returns
 A `NamedTuple` with fields:
@@ -52,10 +52,8 @@ function ex_13_1()
     A = inv(Matrix(ainv(ped)))
     a(i, j) = i > 0 && j > 0 ? A[i, j] : 0.0
     s, d = ped.sire, ped.dam
-    De = [
-        i == j ? 1.0 : (a(s[i], s[j]) * a(d[i], d[j]) + a(s[i], d[j]) * a(d[i], s[j])) / 4 for
-        i = 1:N, j = 1:N
-    ]
+    dij(i, j) = (a(s[i], s[j]) * a(d[i], d[j]) + a(s[i], d[j]) * a(d[i], s[j])) / 4
+    De = [i == j ? 1.0 : dij(i, j) for i = 1:N, j = 1:N]
     check("D by Cockerham's rule = drm()", De, D; atol = 1e-12)
     Di = inv(D)
     check(

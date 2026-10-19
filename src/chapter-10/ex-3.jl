@@ -23,13 +23,13 @@ where:
   knot points.
 
 # Key Concepts Illustrated
-1. **Full-Order Fit**: Computed directly as ``\\hat{C} = \\Phi^{-1} G (\\Phi')^{-1}`` (in Julia
-   `Φ \\ G / Φ'`) and verified against `covariance_function`.
+1. **Full-Order Fit**: Computed directly as ``\\hat{C} = \\Phi^{-1} G (\\Phi')^{-1}`` (in
+   Julia `Φ \\ G / Φ'`) and verified against `covariance_function`.
 2. **Reduced-Order Fit by WLS**: Written out explicitly using the identity
-   ``\\mathrm{vec}(\\Phi C \\Phi') = (\\Phi \\otimes \\Phi)\\,\\mathrm{vec}(C)``. The design matrix
-   for the unique elements is ``X = L(\\Phi_2 \\otimes \\Phi_2)D``, where ``L`` selects the
-   lower triangle of ``G`` and ``D`` is the duplication matrix of ``C``, verified against
-   `covariance_function`.
+   ``\\mathrm{vec}(\\Phi C \\Phi') = (\\Phi \\otimes \\Phi)\\,\\mathrm{vec}(C)``. The design
+   matrix for the unique elements is ``X = L(\\Phi_2 \\otimes \\Phi_2)D``, where ``L``
+   selects the lower triangle of ``G`` and ``D`` is the duplication matrix of ``C``,
+   verified against `covariance_function`.
 3. **Continuous (Co)variance Trajectory**: Evaluates genetic variances and covariances at
    any age along the trajectory, tabulated over 90–240 days for both the full- and
    reduced-order covariance functions.

@@ -20,7 +20,8 @@ For the sire model ``y = Xb + Zs + e`` with ``\\mathrm{var}(s) = I \\sigma_s^2``
    giving unbiased estimators:
    ```math
    \\hat{\\sigma}_e^2 = \\frac{R}{N - r(X, Z)}, \\quad
-   \\hat{\\sigma}_s^2 = \\frac{S - (r(X, Z) - r(X)) \\hat{\\sigma}_e^2}{\\mathrm{tr}(Z' S_X Z)}.
+   \\hat{\\sigma}_s^2 = \\frac{S - (r(X, Z) - r(X)) \\hat{\\sigma}_e^2}{\\mathrm{tr}(Z' S_X
+       Z)}.
    ```
 2. **Canonical Sums of Squares** (Section 17.5) Diagonalizing ``Z' S_X Z`` forms orthogonal
    sire contrasts ``Q's`` with eigenvalues ``w_i`` and independent mean squares
@@ -29,21 +30,21 @@ For the sire model ``y = Xb + Zs + e`` with ``\\mathrm{var}(s) = I \\sigma_s^2``
    \\epsilon`` with ``\\theta = [\\sigma_e^2;\\ \\sigma_s^2]``:
    - **OLS**: ``\\hat{\\theta} = (C'C)^{-1} C' \\mathrm{MS}``.
    - **Iterated GLS**: ``\\hat{\\theta} = (C' V^{-1} C)^{-1} C' V^{-1} \\mathrm{MS}`` with
-     ``V = \\mathrm{diag}\\!\\left(2\\,\\mathrm{E}(\\mathrm{MS}_i)^2 / \\nu_i\\right)`` updated at
-     each iterate.
+     ``V = \\mathrm{diag}\\!\\left(2\\,\\mathrm{E}(\\mathrm{MS}_i)^2 / \\nu_i\\right)``
+     updated at each iterate.
 
 # Key Concepts Illustrated
 1. **Method 3 written out from projections**: We compute ``R(b)`` and ``R(b, s)`` directly
    using `pinv`, evaluate ``\\mathrm{tr}(Z' S_X Z)``, and verify the reductions and variance
    estimates against `henderson3`.
-2. **OLS and iterated GLS written out**: From the canonical sire contrasts (`sire_contrasts`),
-   OLS is simply `C \\ ms`, and iterated GLS is a 3-line loop updating the diagonal weight
-   matrix ``V^{-1}``; both are checked against `fit_mean_squares`, and the estimates of all
-   three methods are compared in a table `est`.
+2. **OLS and iterated GLS written out**: From the canonical sire contrasts
+   (`sire_contrasts`), OLS is simply `C \\ ms`, and iterated GLS is a 3-line loop updating
+   the diagonal weight matrix ``V^{-1}``; both are checked against `fit_mean_squares`, and
+   the estimates of all three methods are compared in a table `est`.
 
 # Notes on Text Discrepancies
-In Section 17.5, the book prints 0.143 and 0.079 for the unweighted OLS fit (exact OLS on the
-three mean squares gives 0.151 and 0.062), and prints 0.216 and 0.234 for the "estimated
+In Section 17.5, the book prints 0.143 and 0.079 for the unweighted OLS fit (exact OLS on
+the three mean squares gives 0.151 and 0.062), and prints 0.216 and 0.234 for the "estimated
 variances" (here the asymptotic sampling variances are 0.051 and 0.062, with standard errors
 0.226 and 0.250). The iterated GLS estimates (0.163, 0.047) match the book.
 

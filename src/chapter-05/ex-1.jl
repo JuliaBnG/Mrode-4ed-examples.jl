@@ -27,7 +27,8 @@ where:
    are joined onto `ped`; all animal-level results are columns of `ped`.
 2. **Repeatability Model**: Fitting both additive genetic and permanent environmental
    effects. With ``R = I\\sigma_e^2`` the MME are, with
-   ``\\lambda_a = \\sigma_e^2/\\sigma_a^2`` and ``\\lambda_{pe} = \\sigma_e^2/\\sigma_{pe}^2``,
+   ``\\lambda_a = \\sigma_e^2/\\sigma_a^2`` and
+   ``\\lambda_{pe} = \\sigma_e^2/\\sigma_{pe}^2``,
    ```math
    \\begin{bmatrix}
    X'X & X'Z & X'W \\\\

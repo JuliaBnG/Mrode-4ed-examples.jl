@@ -59,7 +59,8 @@ right-hand side ``r`` (in the ``\\lambda = \\sigma_e^2/\\sigma_a^2`` form):
    ```math
    \\theta_i \\mid \\theta_{-i}, y, \\sigma_e^2, \\sigma_a^2 \\sim
        N\\!\\left(\\tilde{\\theta}_i,\\; \\frac{\\sigma_e^2}{C_{ii}}\\right), \\quad
-   \\tilde{\\theta}_i = \\frac{1}{C_{ii}}\\left(r_i - \\sum_{j \\neq i} C_{ij} \\theta_j\\right).
+   \\tilde{\\theta}_i = \\frac{1}{C_{ii}}\\left(r_i - \\sum_{j \\neq i} C_{ij}
+       \\theta_j\\right).
    ```
 2. **Variance components**: Under scaled inverse-``\\chi^2`` conjugate priors
    ``(\\nu_a, S_a^2)`` and ``(\\nu_e, S_e^2)``, the full conditionals are:
@@ -74,13 +75,13 @@ right-hand side ``r`` (in the ``\\lambda = \\sigma_e^2/\\sigma_a^2`` form):
 
 # Key Concepts Illustrated
 1. **Round 1 written out as a single-site loop**: Using the 8-animal data table of
-   [`ex_04_1`](@ref), we write out one full sweep of single-site updates from ``\\theta = 0``
-   using the textbook's 10 standard normal deviates (`FixedNormals`) and verify that it
-   matches `gibbs_sweep!` and the book's Round 1 numbers.
-2. **Convergence of posterior means to BLUP when variances are fixed**: Running 8 independent
-   MCMC chains with ``\\sigma_a^2 = 20`` and ``\\sigma_e^2 = 40`` fixed confirms that the
-   posterior mean of ``\\theta`` equals the analytical MME solution ``C^{-1}r`` within Monte
-   Carlo standard error.
+   [`ex_04_1`](@ref), we write out one full sweep of single-site updates from
+   ``\\theta = 0`` using the textbook's 10 standard normal deviates (`FixedNormals`) and
+   verify that it matches `gibbs_sweep!` and the book's Round 1 numbers.
+2. **Convergence of posterior means to BLUP when variances are fixed**: Running 8
+   independent MCMC chains with ``\\sigma_a^2 = 20`` and ``\\sigma_e^2 = 40`` fixed confirms
+   that the posterior mean of ``\\theta`` equals the analytical MME solution ``C^{-1}r``
+   within Monte Carlo standard error.
 3. **Full Gibbs sampling and proper priors**: With flat priors (``\\nu_e = \\nu_a = -2,
    S^2 = 0``) and only 5 records, the joint posterior is improper near ``\\sigma_a^2 = 0``
    and the chain is absorbed there; proper scaled inverse-``\\chi^2`` priors (``\\nu = 4``)

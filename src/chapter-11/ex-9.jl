@@ -40,18 +40,17 @@ marker effects ``g_j`` and variances ``\\sigma_{gj}^2``:
 3. **Behavior of a Monomorphic SNP**: SNP 7 is 0 in all reference bulls (``z_7'z_7 = 0``),
    so the likelihood carries no information about it. Its variance and inclusion indicator
    are sampled from their priors, giving an inclusion probability of ``1 - \\pi`` (0.7 in
-   BayesB, ``1 - \\mathrm{E}(\\pi \\mid y)`` in BayesCπ) and a posterior mean effect centered
-   on zero.
+   BayesB, ``1 - \\mathrm{E}(\\pi \\mid y)`` in BayesCπ) and a posterior mean effect
+   centered on zero.
 
 # Notes on Text Discrepancies
-1. **Initial residual typo**: For bull 1 (animal 13), ``y_1 = 9.0``, ``\\hat{\\mu} = 9.888``,
-   and marker dosages summing to 9 (6 non-zero SNPs) at ``0.05`` give
-   ``\\hat{e}_1 = 9.0 - 9.888 - 0.45 = -1.338``,
-   whereas the book prints ``-1.388``.
+1. **Initial residual typo**: For bull 1 (animal 13), ``y_1 = 9.0``,
+   ``\\hat{\\mu} = 9.888``, and marker dosages summing to 9 (6 non-zero SNPs) at ``0.05``
+   give ``\\hat{e}_1 = 9.0 - 9.888 - 0.45 = -1.338``, whereas the book prints ``-1.388``.
 2. **Monte Carlo Verification**: The book's first-iteration values depend on its specific
    random numbers, and its posterior means (from 7,000 samples) carry noticeable Monte Carlo
-   error. Here, the deterministic starting step is checked exactly and posterior means from a
-   50,000-iteration chain are verified within Monte Carlo tolerance.
+   error. Here, the deterministic starting step is checked exactly and posterior means from
+   a 50,000-iteration chain are verified within Monte Carlo tolerance.
 
 # Returns
 A `Dict{Symbol, BayesResult}` with keys `:A`, `:B`, `:C`, `:Cpi`.
@@ -169,9 +168,7 @@ function ex_11_9(; niter = 50_000, burnin = 10_000)
         [0.7, 1 - res[:Cpi].π];
         atol = 0.02,
     )
-    println(
-        "\nPosterior mean SNP effects (and inclusion probabilities) with the book's values:",
-    )
+    println("\nPosterior mean SNP effects (and inclusion probabilities), and the book's:")
     show_table(snps)
     println("\nDGV of the bulls (uncentred genotypes, without the mean):")
     show_table(bulls)

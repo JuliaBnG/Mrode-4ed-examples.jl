@@ -30,11 +30,12 @@ quadratic form.
    ```
    verifying both against `reml`.
 2. **AI-REML vs EM-REML convergence**: AI-REML replaces expensive trace evaluations with
-   working-variate quadratic forms (the Average Information matrix ``\\mathcal{I}_{\\mathrm{AI}}``)
-   and converges in 5 iterates, whereas EM-REML is first-order and requires ~1000 iterates to
-   reach the same maximum. At convergence, ``\\mathcal{I}_{\\mathrm{AI}}^{-1}`` provides the
-   asymptotic sampling covariance matrix of ``(\\hat{\\sigma}_e^2, \\hat{\\sigma}_a^2)``, and
-   the final EBVs are added as a column of `ped`.
+   working-variate quadratic forms (the Average Information matrix
+   ``\\mathcal{I}_{\\mathrm{AI}}``) and converges in 5 iterates, whereas EM-REML is
+   first-order and requires ~1000 iterates to reach the same maximum. At convergence,
+   ``\\mathcal{I}_{\\mathrm{AI}}^{-1}`` provides the asymptotic sampling covariance matrix
+   of ``(\\hat{\\sigma}_e^2, \\hat{\\sigma}_a^2)``, and the final EBVs are added as a column
+   of `ped`.
 
 # Note on Text Discrepancy
 At the starting values, the book prints calf 4's breeding value as ``\\hat{a}_4 = -0.254``;

@@ -171,6 +171,10 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
 - **`ex_11_3` (Sections 11.4.2–11.4.5 and 11.9)**: Genomic BLUP (GBLUP)
   using VanRaden's first genomic relationship matrix ($G$), back-solving
   marker effects from GEBVs, selection index, and genomic reliabilities.
+  The GBLUP MME, $\hat{g} = Z'G^{-1}\hat{a}/k$ and the index are written
+  out and checked against `mme`, `snp_from_gblup` and `gblup_index`;
+  GBLUP is compared with SNP-BLUP (equal up to the regularization of
+  the singular $G$).
 - **`ex_11_6` (Section 11.4.6)**: Base-population allele frequencies and
   gene content of ungenotyped ancestors by the linear method of Gengler
   et al. (2007), compared with the GLS estimator.

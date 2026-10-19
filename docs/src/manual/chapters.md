@@ -108,7 +108,11 @@ Models accounting for both the direct genetic ability of an animal and the mater
   The MME, with direct and maternal blocks weighted by
   $\alpha = \sigma^2_e G_0^{-1}$, are written out and checked against
   `mme`.
-- **`ex_08_2` (Section 8.3)**: Maternal Reduced Animal Model (RAM).
+- **`ex_08_2` (Section 8.3)**: Maternal Reduced Animal Model (RAM) on
+  the data table of `ex_08_1`. The reduced MME are written out in the
+  general $R^{-1}$ form; direct (Eqn 8.8) and maternal (Eqn 8.10)
+  effects of non-parents are back-solved explicitly, and all solutions
+  equal those of the full animal model.
 
 ---
 

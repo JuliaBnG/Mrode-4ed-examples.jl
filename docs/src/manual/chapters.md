@@ -134,7 +134,9 @@ Evaluates indirect genetic effects (IGE) / associative effects in group-housed a
 Models continuous longitudinal or trajectory traits (e.g. test-day milk yields):
 - **`ex_10_1` (Section 10.2)**: Fixed regression test-day model with one
   lactation curve of normalized Legendre polynomials of order 4, and
-  animal and permanent environment effects.
+  animal and permanent environment effects. Table 10.1 is typed as in
+  the book, one column per cow, and stacked to one row per test day;
+  the MME are written as $T'T + \Sigma$ and checked against `mme`.
 - **`ex_10_2` (Section 10.3)**: Random regression test-day model using
   orthogonal Legendre polynomials for animal genetic and permanent
   environmental trajectories. Calculation of 305-day cumulative

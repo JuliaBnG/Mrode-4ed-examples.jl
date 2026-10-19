@@ -20,12 +20,17 @@ where:
   ``\\sigma_e^2 = 3.710``.
 
 # Key Concepts Illustrated
-1.  **Legendre Polynomials for Lactation Curves**: Orthogonal polynomials over standardised
+1. **Tables**: Table 10.1 is typed as in the book (one column per cow) and
+   stacked to one row per test day; daily and 305-day EBV, pe, YD and the
+   partition weights are added as columns of the pedigree.
+2. **MME** as ``T'T + \\Sigma`` with ``T = [X_1\\ X_2\\ Z\\ Q]``, where row ``i`` of
+   ``X_2`` is the row of ``\\Phi`` for the DIM of record ``i``; compared with `mme`.
+3.  **Legendre Polynomials for Lactation Curves**: Orthogonal polynomials over standardised
    intervals.
-2.  **Fixed Regression Test-Day Model**: A single average curve fitted to all cows, with
+4.  **Fixed Regression Test-Day Model**: A single average curve fitted to all cows, with
    constant daily breeding values and permanent environment.
-3. **305-Day Genetic Evaluations**: Daily EBV scaled by 305 days.
-4. **Decomposition of EBVs**: Partition into Parent Average (PA) and Yield Deviation (YD)
+5. **305-Day Genetic Evaluations**: Daily EBV scaled by 305 days.
+6. **Decomposition of EBVs**: Partition into Parent Average (PA) and Yield Deviation (YD)
    adjusted for HTD, curve, and permanent environment.
 
 # Note on Text Discrepancy
@@ -36,6 +41,9 @@ here.
 
 # Returns
 A `NamedTuple` with fields:
+- `ped`: The pedigree with columns `ebv`, `ebv305`, `pe`, `n`, `YD`, `w_PA` and `w_YD` added.
+- `rec`: The test-day records with the corrected yields `yc` added.
+- `curve`: The fixed lactation curve at the ten DIM.
 - `b`: Fixed effect solutions (HTD and Legendre curve coefficients).
 - `a`: Daily estimated breeding values for animals 1 to 8.
 - `pe`: Daily permanent environmental effects for cows 4 to 8.
@@ -43,11 +51,12 @@ A `NamedTuple` with fields:
 function ex_10_1()
     println("Example 10.1: fixed regression model for test-day fat yield")
 
-    # 1. Load test-day data and variance components
-    (; ped, dims, cow, dim, htd, y, Φ) = data_10()
+    # 1. Test-day records (one row per test day), pedigree and Legendre polynomials
+    (; ped, rec, dims, Φ) = data_10()
     σ²a = 5.521
     σ²pe = 8.470
     σ²e = 3.710
+    println(rec)
 
     check(
         "Φ (Appendix G), first and last rows",
@@ -56,16 +65,31 @@ function ex_10_1()
         atol = 5e-4,
     )  # the book rounds the Legendre coefficients to 4 decimals
 
-    # 2. Design matrices and MME setup
-    X1, _ = incidence(htd)                          # fixed HTD effects (10 levels)
-    X2 = Φ[dim, :]                                  # fixed lactation curve (order 4)
-    Z = incidence(cow, nrow(ped))                   # random animal effect
-    Q, _ = incidence(cow)                           # random pe effect
-    m = mme(y, [X1 X2], [RandomEffect(Z, ainv(ped), σ²a), RandomEffect(Q, I, σ²pe)]; σ²e)
+    # 2. Design matrices: row i of X₂ is the row of Φ for the DIM of record i
+    y = rec.tdy
+    X1, _ = incidence(rec.htd)                      # fixed HTD effects (10 levels)
+    X2 = Φ[rec.dim, :]                              # fixed lactation curve (order 4)
+    Z = incidence(rec.cow, nrow(ped))               # random animal effect
+    Q, cows = incidence(rec.cow)                    # random pe effect, cows 4–8
+    Ai = ainv(ped)
+    check("X₁'X₁ = diag(records per HTD)", diag(X1'X1), [3, 3, 3, 4, 4, 5, 5, 5, 5, 5]; atol = 0)
+
+    # 3. MME (R = Iσ²e): with T = [X₁ X₂ Z Q], the coefficient matrix is T'T plus
+    #    λa A⁻¹ in the animal block and λpe I in the pe block
+    T = [X1 X2 Z Q]
+    Σ = blockdiag(
+        spzeros(size(X1, 2) + size(X2, 2), size(X1, 2) + size(X2, 2)),
+        sparse(σ²e / σ²a * Ai),
+        sparse(σ²e / σ²pe * I, length(cows), length(cows)),
+    )
+    lhs = T'T + Σ
+    rhs = T'y
+    m = mme(y, [X1 X2], [RandomEffect(Z, Ai, σ²a), RandomEffect(Q, I, σ²pe)]; σ²e)
+    check("mme() LHS = T'T + Σ", m.lhs, lhs; atol = 1e-12)
 
     check(
         "X₂'X₂",
-        Matrix(m.lhs[11:15, 11:15]),
+        Matrix(X2'X2),
         [
             20.9996 -4.4261 4.0568 -0.8441 8.7149;
             -4.4261 24.6271 -4.7012 11.1628 -3.0641;
@@ -76,10 +100,11 @@ function ex_10_1()
         atol = 1e-2,
     )
 
-    # 3. Solve MME (HTD 10 set to zero)
-    x = solve_mme(m; zero = [10])                   # HTD 10 set to zero
-    b, (a, pe) = solutions(m, x)
-    a, pe = vec(a), vec(pe)
+    # 4. Solve MME (HTD 10 set to zero)
+    x = solve_mme(lhs, rhs; zero = [10])            # HTD 10 set to zero
+    b = x[m.blocks[1]]
+    a = x[m.blocks[2]]
+    pe = x[m.blocks[3]]
 
     check(
         "HTD",
@@ -107,26 +132,36 @@ function ex_10_1()
     )
     check("pe (daily)", pe, [-0.6156, -0.4151, -1.6853, 2.8089, -0.0928]; atol = 1e-4)
 
-    # 4. Fitted lactation curve: v = Φ b̂₂
+    # 5. Fitted lactation curve: v = Φ b̂₂
     # Note: the book's values from DIM 174 on are not Φ b̂₂; the verified values are checked here.
-    v = Φ * b[11:15]
-    show_table(DIM = dims, v = v; digits = 4)
+    curve = DataFrame(DIM = dims, v = Φ * b[11:15])
+    println("\nFixed lactation curve:")
+    show_table(curve; digits = 4)
     check(
         "lactation curve v, DIM 4–140",
-        v[1:5],
+        curve.v[1:5],
         [10.0835, 12.2001, 12.6254, 12.2077, 11.5679];
         atol = 2e-4,
     )
 
-    # 5. Partition of EBV (Eqn 4.8): YD corrected for HTD, curve, and pe
-    yc = y - [X1 X2] * b - Q * pe
-    nrec = [count(==(i), cow) for i = 1:8]
-    yd = [nrec[i] > 0 ? sum(yc[cow .== i]) / nrec[i] : 0.0 for i = 1:8]
-    p = ebv_partition(ped.sire, ped.dam, σ²e / σ²a, nrec, yd, a)
+    # 6. Partition of EBV (Eqn 4.8): records corrected for HTD, curve and pe,
+    #    averaged per cow (YD), and joined onto the pedigree
+    rec.yc = y - [X1 X2] * b - Q * pe
+    ydev = combine(groupby(rec, :cow), nrow => :n, :yc => mean => :YD)
+    ped.ebv, ped.ebv305 = a, 305a
+    ped.pe = Vector{Union{Missing,Float64}}(missing, nrow(ped))
+    ped.pe[cows] = pe
+    leftjoin!(ped, ydev; on = :id => :cow)
+    ped.n = coalesce.(ped.n, 0)
+    p = ebv_partition(ped.sire, ped.dam, σ²e / σ²a, ped.n, coalesce.(ped.YD, 0.0), a)
+    ped.w_PA, ped.w_YD = p.n1, p.n2
 
-    check("YD of cows 6 and 8", yd[[6, 8]], [-0.9844, 0.3746]; atol = 1e-4)
+    check("YD of cows 6 and 8", ped.YD[[6, 8]], [-0.9844, 0.3746]; atol = 1e-4)
     check("weights on YD of cows 6 and 8", p.n2[[6, 8]], [0.7882, 0.8815]; atol = 1e-4)
     check("weight on PA of cows 8 and 4", p.n1[[8, 4]], [0.1185, 0.1151]; atol = 1e-4)
 
-    (; b, a, pe)
+    println("\nPedigree with solutions:")
+    show_table(ped; digits = 4)
+
+    (; ped, rec, curve, b, a, pe)
 end

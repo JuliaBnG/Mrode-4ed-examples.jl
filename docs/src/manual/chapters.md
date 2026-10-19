@@ -91,7 +91,11 @@ Simultaneous genetic evaluation of multiple genetically correlated traits:
   and `mt_rinv`.
 - **`ex_06_5` (Section 6.5.2)**: Multi-trait across-country evaluation
   (MACE) of bulls with a sire–maternal-grandsire model and phantom
-  groups, and the partition of MACE proofs.
+  groups, and the partition of MACE proofs. National proofs are kept
+  one row per bull and country; their EDC weights make $R$
+  heterogeneous, so the MME are written out in the general $R^{-1}$
+  form, with the group stabilization explicit, and checked against
+  `mme`.
 
 ---
 

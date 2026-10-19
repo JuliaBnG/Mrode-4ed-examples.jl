@@ -158,7 +158,11 @@ Models continuous longitudinal or trajectory traits (e.g. test-day milk yields):
 Comprehensive genomic evaluation incorporating high-density marker panels:
 - **`ex_11_1` (Section 11.3)**: SNP effects fitted as fixed effects
   together with a random polygenic (animal) effect, without and with EDC
-  weights.
+  weights. One general-form MME,
+  $[X'R^{-1}X\ X'R^{-1}W;\ W'R^{-1}X\ W'R^{-1}W + A^{-1}/\sigma^2_a]$,
+  covers both analyses ($R^{-1} = I/\sigma^2_e$ or
+  $\mathrm{diag}(\mathrm{EDC}/\sigma^2_e)$) and is checked against `mme`;
+  DGV, polygenic effects and GEBV are added to a table of bulls.
 - **`ex_11_2` (Section 11.4.1)**: Ridge regression BLUP / SNP-BLUP
   estimating individual SNP allele substitution effects.
 - **`ex_11_3` (Sections 11.4.2–11.4.5 and 11.9)**: Genomic BLUP (GBLUP)

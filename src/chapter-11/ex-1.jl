@@ -23,6 +23,22 @@ where:
 - Direct Genomic Value (DGV) is computed as ``\\mathrm{DGV} = Z_m \\hat{g}``, and
   Genomic Estimated Breeding Value (GEBV) as ``\\mathrm{GEBV} = \\mathrm{DGV} + \\hat{u}``.
 
+# Key Concepts Illustrated
+1. **Tables**: the pedigree, and the genotyped bulls with their DYD and EDC;
+   DGV, polygenic effects and GEBV of both analyses are added as columns of
+   the bull table. The genotypes stay a matrix, `M`.
+2. **One MME for both analyses**: the general form
+   ```math
+   \\begin{bmatrix}
+   X'R^{-1}X & X'R^{-1}W \\\\
+   W'R^{-1}X & W'R^{-1}W + A^{-1}/\\sigma_a^2
+   \\end{bmatrix},
+   \\quad X = [\\mathbf{1}\\ Z_m],
+   ```
+   with ``R^{-1} = I/\\sigma_e^2`` (unweighted) or
+   ``R^{-1} = \\mathrm{diag}(\\mathrm{EDC}_i/\\sigma_e^2)`` (weighted), written out and
+   compared with `mme`.
+
 # Returns
 A `Vector{NamedTuple}` with unweighted and weighted results:
 `[(; b, u, dgv), (; b, u, dgv)]`.
@@ -30,8 +46,10 @@ A `Vector{NamedTuple}` with unweighted and weighted results:
 function ex_11_1()
     println("Example 11.1: three SNPs as fixed effects plus polygenic effects")
 
-    # 1. Load data for reference and candidate bulls
-    (; ped, M, dyd, edc, id, ref, cand, σ²a, σ²e) = data_11()
+    # 1. Pedigree (one row per animal), bulls (one row per genotyped bull, in the
+    #    row order of the genotype matrix M) and variance components
+    (; ped, bulls, M, σ²a, σ²e) = data_11()
+    println(bulls)
 
     # 2. Center genotypes: Z = M - 2p
     Z, p, _ = center_genotypes(M)
@@ -41,23 +59,45 @@ function ex_11_1()
         [0.321, 0.179, 0.357, 0.357, 0.143, 0.607, 0.071, 0.964, 0.571, 0.393],
     )
 
-    # 3. Setup design matrices for the first 3 SNPs and polygenic effect
+    # 3. Design matrices for the reference bulls: mean and the first 3 SNPs
+    #    (fixed), and the polygenic effect of all 26 animals
+    isref = bulls.set .== "reference"
+    ref = bulls[isref, :]
     Z3 = Z[:, 1:3]
-    y = dyd[ref]
-    X = [ones(8) Z3[ref, :]]
-    W = incidence(id[ref], nrow(ped))
+    y = ref.dyd
+    X = [ones(nrow(ref)) Z3[isref, :]]
+    W = incidence(ref.id, nrow(ped))
     Ai = ainv(ped)
 
-    # 4. Fit unweighted and EDC-weighted models
-    res = map([(; σ²e), (; Rinv = edc[ref] ./ σ²e)]) do r
-        m = mme(y, X, [RandomEffect(W, Ai, σ²a)]; r...)
-        b, (u,) = solutions(m, solve_mme(m))
-        (; b, u = vec(u), dgv = Z3 * b[2:4])
+    # 4. MME in the general form [X'R⁻¹X X'R⁻¹W; W'R⁻¹X W'R⁻¹W + A⁻¹/σ²a] for
+    #    the unweighted analysis, R⁻¹ = I/σ²e, and the weighted one,
+    #    R⁻¹ = diag(EDC/σ²e): each DYD is weighted by its daughter contribution
+    fits = [("unweighted", fill(1 / σ²e, nrow(ref))), ("weighted", ref.edc ./ σ²e)]
+    res = map(fits) do (lab, rinv)
+        Ri = Diagonal(rinv)
+        lhs = [
+            X'Ri*X  X'Ri*W
+            W'Ri*X  W'Ri*W + Ai / σ²a
+        ]
+        rhs = [X'Ri*y; W'Ri*y]
+        m = mme(y, X, [RandomEffect(W, Ai, σ²a)]; Rinv = rinv)
+        check("$lab: mme(; Rinv) LHS = general form", m.lhs, lhs; atol = 1e-12)
+        x = lhs \ rhs
+        b = x[m.blocks[1]]
+        u = x[m.blocks[2]]
+        (; b, u, dgv = Z3 * b[2:4])
     end
+    #    With R = Iσ²e, the λ form of mme(; σ²e) gives the same solutions
+    m0 = mme(y, X, [RandomEffect(W, Ai, σ²a)]; σ²e)
+    check("unweighted: λ form = general form", solve_mme(m0), [res[1].b; res[1].u]; atol = 1e-10)
 
-    for (lab, r) in zip(("unweighted", "weighted"), res)
-        show_table(bull = id, DGV = r.dgv, polygenic = r.u[id])
+    # 5. Results per bull: DGV = Z₃ĝ, polygenic û, GEBV = DGV + û
+    for ((lab, _), r) in zip(fits, res)
+        bulls[!, "dgv_$lab"] = r.dgv
+        bulls[!, "u_$lab"] = r.u[bulls.id]
+        bulls[!, "gebv_$lab"] = r.dgv + r.u[bulls.id]
     end
+    show_table(bulls)
 
     uw, wt = res
     check("unweighted: mean and SNP effects", uw.b, [9.895, 0.607, -4.080, 1.934])
@@ -84,7 +124,7 @@ function ex_11_1()
     )
     check(
         "unweighted: polygenic",
-        uw.u[id],
+        uw.u[bulls.id],
         [
             -0.299,
             0.256,
@@ -125,7 +165,7 @@ function ex_11_1()
     )  # large EDC weights magnify the book's rounding (α = 6.952)
     check(
         "weighted: polygenic",
-        wt.u[id],
+        wt.u[bulls.id],
         [
             -3.821,
             4.116,
@@ -144,7 +184,7 @@ function ex_11_1()
         ];
         atol = 3e-3,
     )
-    check("GEBV of bull 13 (unweighted)", uw.dgv[1] + uw.u[13], 2.535)
+    check("GEBV of bull 13 (unweighted)", bulls.gebv_unweighted[1], 2.535)
 
     res
 end

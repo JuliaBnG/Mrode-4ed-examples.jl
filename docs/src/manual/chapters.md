@@ -7,7 +7,17 @@ This catalogue summarizes the quantitative genetic methodology and computational
 ## Chapter 4: Best Linear Unbiased Prediction of Breeding Values
 
 Covers basic linear mixed model equations (MME) for single-trait evaluations:
-- **`ex_04_1` (Sections 4.1–4.3)**: Univariate animal model for pre-weaning gain (WWG). Demonstrates $A^{-1}$ via `ainv(ped)`, accuracy calculation (prediction error variance $\mathrm{PEV}$, reliability $r^2$, $\mathrm{SEP}$), and decomposition of breeding values into Parent Average ($\mathrm{PA}$), Yield Deviation ($\mathrm{YD}$), and Progeny Contribution ($\mathrm{PC}$).
+- **`ex_04_1` (Sections 4.1–4.3)**: Univariate animal model for
+  pre-weaning gain (WWG), with pedigree, records and all solutions in
+  one `DataFrame` (`ainv(ped)` uses only its `sire` and `dam` columns).
+  The MME are written out explicitly in the general form, with
+  $R^{-1}$ (heterogeneous residuals allowed), and in the book's form
+  $[X'X\ X'Z;\ Z'X\ Z'Z + \lambda A^{-1}]$ for $R = I\sigma^2_e$; both
+  are checked against `mme`. Also covers accuracy (prediction error
+  variance $\mathrm{PEV}$, reliability $r^2$, $\mathrm{SEP}$) and the
+  decomposition of breeding values into Parent Average
+  ($\mathrm{PA}$), Yield Deviation ($\mathrm{YD}$), and Progeny
+  Contribution ($\mathrm{PC}$).
 - **`ex_04_2` (Section 4.4)**: Sire model using sire relationship matrix $A_s^{-1}$ and evaluation of transmitting abilities.
 - **`ex_04_3` (Section 4.5)**: Reduced Animal Model (RAM), absorbing non-parent equations to reduce system dimensionality.
 - **`ex_04_4` (Section 4.6)**: Animal model incorporating genetic groups / unknown parent groups (UPG) using the $QP$ formulation.

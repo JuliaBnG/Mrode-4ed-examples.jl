@@ -209,7 +209,10 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
 ## Chapter 12: Single-Step GBLUP and APY
 
 Integration of genotyped and non-genotyped animals into unified national evaluations:
-- **`ex_12_1` (Section 12.1)**: Single-step GBLUP (ssGBLUP) with the Aguilar/Legarra $H^{-1}$ matrix:
+- **`ex_12_1` (Section 12.1)**: Single-step GBLUP (ssGBLUP), with
+  tuning, $H^{-1}$ and the MME written out and checked against
+  `tune_grm`, `hinv` and `mme`; ssGBLUP and pedigree BLUP of all animals
+  as columns of the pedigree. The Aguilar/Legarra $H^{-1}$ matrix:
   ```math
   H^{-1} = A^{-1} + \begin{bmatrix} 0 & 0 \\ 0 & G^{-1} - A_{22}^{-1} \end{bmatrix}
   ```

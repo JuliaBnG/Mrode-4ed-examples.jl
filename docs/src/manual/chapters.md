@@ -287,7 +287,11 @@ Evaluation of categorical and disease resistance traits:
 ## Chapter 17: Variance Component Estimation
 
 Estimation of genetic and residual variance components:
-- **`ex_17_1` (Sections 17.3–17.5)**: Henderson's Method 3 and canonical reduction of sums of squares.
+- **`ex_17_1` (Sections 17.3–17.5)**: Henderson's Method 3 and canonical
+  reduction of sums of squares. Method 3 is written out from the
+  reductions $R(b)$ and $R(b, s)$, OLS as `C \ ms` and the GLS iteration
+  as a short loop, all checked against the library; the estimates of the
+  three methods are compared in a table.
 - **`ex_17_2` (Section 17.7)**: Restricted Maximum Likelihood (REML) via Expectation-Maximization (EM-REML) and Average Information (AI-REML).
 
 ---

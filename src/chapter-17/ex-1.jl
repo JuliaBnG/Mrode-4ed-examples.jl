@@ -50,24 +50,46 @@ Written in regression form
   ``V = 2 \\,\\mathrm{diag}\\left(\\frac{(\\mathbb{E}[\\mathrm{MS}_i])^2}{\\nu_i}\\right)``,
   iterated until convergence.
 
+# Written Out
+Method 3 is computed from the reductions ``R(\\mathbf{b})`` and ``R(\\mathbf{b}, \\mathbf{s})``
+and compared with `henderson3`; OLS is `C \\ ms` and the GLS iteration a three-line loop,
+compared with `fit_mean_squares`. The estimates of the three methods are collected in a
+table.
+
 # Returns
 A `NamedTuple` with fields:
 - `h`: Henderson's method 3 (reductions, degrees of freedom and estimates).
 - `c`: Canonical sire contrasts (sums of squares, eigenvalues ``w_i``, residual).
 - `θ`: OLS fit ``(\\hat\\sigma_e^2, \\hat\\sigma_s^2)`` to the mean squares.
 - `θw`: Iterated GLS fit ``(\\hat\\sigma_e^2, \\hat\\sigma_s^2)``.
+- `est`: Table of the estimates of the three methods.
 """
 function ex_17_1()
     println("Sections 17.3 and 17.5: variance components of a sire model")
 
-    # Step 1: Data and design matrices
-    sire = [2, 1, 3, 2]
-    y = [2.9, 4.0, 3.5, 3.5]
-    X = ones(4, 1)
-    Z = Matrix(first(incidence(sire)))
+    # Step 1: Records (one row per progeny) and design matrices
+    rec = DataFrame(sire = [2, 1, 3, 2], y = [2.9, 4.0, 3.5, 3.5])
+    y = rec.y
+    X = ones(nrow(rec), 1)
+    Z = Matrix(first(incidence(rec.sire)))
 
-    # Step 2: Henderson's Method 3
+    # Step 2: Henderson's Method 3, written out from the reductions
+    #    R(b) = y'X(X'X)⁻X'y and R(b, s) with [X Z], so S = R(b, s) - R(b) and
+    #    R = y'y - R(b, s); E(S) = tr(Z'S_X Z)σ²s + (r(X, Z) - r(X))σ²e
     h = henderson3(y, X, Z)
+    red(T) = y' * T * pinv(T'T) * T' * y
+    W = [X Z]
+    Rb, Rbs = red(X), red(W)
+    Sx = I - X * pinv(X'X) * X'
+    rX, rXZ = rank(X), rank(W)
+    σ²e3 = (y'y - Rbs) / (length(y) - rXZ)
+    σ²s3 = (Rbs - Rb - (rXZ - rX) * σ²e3) / tr(Z' * Sx * Z)
+    check(
+        "F, S, R and σ²e, σ²s = henderson3()",
+        [Rb, Rbs - Rb, y'y - Rbs, σ²e3, σ²s3],
+        [h.F, h.S, h.R, h.σ²e, h.σ²s];
+        atol = 1e-12,
+    )
     check("F, S, R", [h.F, h.S, h.R], [48.3025, 0.4275, 0.1800]; atol = 1e-10)
     check("Z'SZ", h.ZSZ, [0.75 -0.5 -0.25; -0.5 1 -0.5; -0.25 -0.5 0.75]; atol = 1e-12)
     check("σ²e, σ²s (method 3)", [h.σ²e, h.σ²s], [0.18, 0.027])
@@ -90,6 +112,22 @@ function ex_17_1()
     θw, V = fit_mean_squares(ms, df, C)
     check("iterated GLS fit: σ²e, σ²s", θw, [0.163, 0.047])
 
+    #    written out: OLS is C \ ms (least squares for a tall C); GLS iterates
+    #    θ = (C'V⁻¹C)⁻¹C'V⁻¹ms with V = diag(2E(msᵢ)²/νᵢ) at the current θ
+    θe = C \ ms
+    for _ = 1:100
+        Vi = Diagonal(df ./ (2 .* (C * θe) .^ 2))
+        θe = (C' * Vi * C) \ (C' * Vi * ms)
+    end
+    check("OLS = C \\ ms, GLS iteration (fit_mean_squares)", [C \ ms; θe], [θ; θw]; atol = 1e-8)
+
+    est = DataFrame(
+        method = ["Henderson 3", "OLS", "iterated GLS"],
+        σ²e = [h.σ²e, θ[1], θw[1]],
+        σ²s = [h.σ²s, θ[2], θw[2]],
+    )
+    show_table(est)
+
     # The book's "estimated variances" 0.216 and 0.234 are not reproduced;
     # the sampling variances here are (0.051, 0.062), SEs (0.226, 0.250).
     @printf(
@@ -97,5 +135,5 @@ function ex_17_1()
         diag(V)...,
         sqrt.(diag(V))...
     )
-    (; h, c, θ, θw)
+    (; h, c, θ, θw, est)
 end

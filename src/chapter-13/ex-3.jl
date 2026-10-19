@@ -4,27 +4,28 @@
 Helper function fitting the genomic additive and dominance model.
 If `f == true`, individual genomic inbreeding (proportion of homozygous loci)
 is fitted as an extra fixed regression covariate to estimate inbreeding depression.
+The MME are written out as ``T'T + \\Sigma`` with ``T = [X\\ Z\\ Z]`` and compared with
+`mme`.
 """
 function gdmodel(f::Bool)
-    (; M, pig, pen, ww, σ²a, σ²d, σ²e) = data_13_3()
+    (; M, pigs, σ²a, σ²d, σ²e) = data_13_3()
+    rec = dropmissing(pigs, :ww)
     n, nsnp = size(M)
     p = vec(mean(M; dims = 1)) ./ 2
     G = grm(Matrix{Int8}(M'), p)
     D = grm(Matrix{Int8}(M'), p; method = :dominance)
-    X, _ = incidence(pen)
-    if f                     # proportion of homozygous SNPs, f = 1 - h/N
-        fi = 1 .- vec(count(==(1), M; dims = 2)) ./ nsnp
-        X = [X fi[pig]]
-    end
-    Z = incidence(pig, n)
-    m = mme(
-        ww,
-        X,
-        [RandomEffect(Z, inv(G + 0.01I), σ²a), RandomEffect(Z, inv(D + 0.01I), σ²d)];
-        σ²e,
-    )
-    b, (a, d) = solutions(m, solve_mme(m))
-    (; p, G, D, b, a = vec(a), d = vec(d))
+    X, _ = incidence(rec.pen)
+    fi = 1 .- vec(count(==(1), M; dims = 2)) ./ nsnp     # proportion of homozygous SNPs
+    f && (X = [X fi[rec.pig]])
+    Z = incidence(rec.pig, n)
+    Gi, Di = inv(G + 0.01I), inv(D + 0.01I)
+    T = [X Z Z]
+    nb = size(X, 2)
+    Σ = blockdiag(spzeros(nb, nb), sparse(σ²e / σ²a * Gi), sparse(σ²e / σ²d * Di))
+    m = mme(rec.ww, X, [RandomEffect(Z, Gi, σ²a), RandomEffect(Z, Di, σ²d)]; σ²e)
+    check("mme() LHS = T'T + Σ" * (f ? " (with f)" : ""), m.lhs, T'T + Σ; atol = 1e-10)
+    x = (T'T + Σ) \ (T' * rec.ww)
+    (; p, G, D, fi, b = x[m.blocks[1]], a = x[m.blocks[2]], d = x[m.blocks[3]])
 end
 
 """
@@ -51,8 +52,17 @@ Examples 13.3 & 13.4: Genomic additive and dominance models and inbreeding depre
    y = Xb + f_i \\beta_{\\mathrm{inb}} + Z a_g + Z d_g + e
    ```
 
+# Key Concepts Illustrated
+1. **``G`` and ``D`` written out** from the additive coding ``Z = M - 2p`` and the
+   dominance coding of Vitezica et al. (2013) (``-2q^2``, ``2pq``, ``-2p^2`` for 2, 1, 0
+   copies of the counted allele), ``D = HH'/\\sum(2pq)^2``; compared with `grm`.
+2. **MME** as ``T'T + \\Sigma``, ``T = [X\\ Z\\ Z]``, compared with `mme`.
+3. **Tables**: genomic inbreeding and the additive and dominance solutions of both
+   models are added as columns of the pig table.
+
 # Returns
 A `NamedTuple` with fields:
+- `pigs`: The pigs with `f`, and `a`, `d` (Example 13.3) and `a_f`, `d_f` (13.4) added.
 - `r`: Results from model without inbreeding covariate (Example 13.3).
 - `s`: Results from model with inbreeding covariate (Example 13.4).
 """
@@ -60,7 +70,18 @@ function ex_13_3()
     println("Example 13.3: genomic additive and dominance model")
 
     # 1. Model without inbreeding covariate (Example 13.3)
+    (; M, pigs) = data_13_3()
     r = gdmodel(false)
+
+    #    G and D written out. With p the frequency of the counted allele,
+    #    Z = M - 2p (additive) and the dominance coding of Vitezica et al. (2013):
+    #    -2q² for 2 copies, 2pq for heterozygotes, -2p² for 0 copies
+    p, q = r.p, 1 .- r.p
+    Za = M .- 2p'
+    h(m, p, q) = m == 2 ? -2q^2 : m == 1 ? 2p * q : -2p^2
+    H = h.(M, p', q')
+    check("G = ZZ'/2Σpq", r.G, Za * Za' / (2sum(p .* q)); atol = 1e-12)
+    check("D = HH'/Σ(2pq)²", r.D, H * H' / sum((2p .* q) .^ 2); atol = 1e-12)
     check(
         "allele frequencies",
         r.p,
@@ -129,7 +150,8 @@ function ex_13_3()
             0.865,
         ],
     )
-    show_table(animal = 1:15, additive = r.a, dominance = r.d)
+    pigs.f = r.fi
+    pigs.a, pigs.d = r.a, r.d
     check("pen", r.b, [17.451, 20.812])
     check(
         "additive",
@@ -221,5 +243,8 @@ function ex_13_3()
         ],
     )
 
-    (; r, s)
+    pigs.a_f, pigs.d_f = s.a, s.d
+    show_table(pigs)
+
+    (; r, s, pigs)
 end

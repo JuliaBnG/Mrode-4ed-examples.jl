@@ -234,7 +234,11 @@ Partitioning non-additive genetic variation for commercial crossing and mating a
   a + d$ with $V = A\sigma^2_a + D\sigma^2_d$, its MME written out, and
   $\hat{a}$, $\hat{d}$ recovered from $\hat{g}$.
 - **`ex_13_3` (Section 13.4)**: Genomic dominance relationship matrices
-  and estimation of genomic inbreeding depression.
+  and estimation of genomic inbreeding depression. $G$ and $D$ are
+  written out from the additive and the Vitezica et al. (2013) dominance
+  coding and checked against `grm`; the MME, $T'T + \Sigma$ with $T =
+  [X\ Z\ Z]$, are checked against `mme`, and all solutions are columns
+  of the pig table.
 - **`ex_13_5` (Section 13.5)**: Additive-by-additive ($A \odot A$ or $G \odot G$) epistatic relationship models.
 
 ---

@@ -26,7 +26,9 @@ representing the conditional variance of non-core animal ``i`` given the core an
 1. **Core Animal Selection**: Bulls 15, 20, 22, and 26 chosen as core animals.
 2.  **Sparsity of APY Inverse**: The non-core block of ``G_{\\mathrm{APY}}^{-1}`` is
    strictly diagonal.
-3.  **Comparison of DGVs**: Evaluating correlation between DGVs computed using exact
+3. **The APY inverse written out** from its blocks and compared with `apy_ginv`;
+   GBLUP MME written out and compared with `mme`.
+4.  **Comparison of DGVs**: Evaluating correlation between DGVs computed using exact
    ``G^{-1}`` versus APY ``G_{\\mathrm{APY}}^{-1}`` (here ``r \\approx 0.95``).
 
 # Note on Text Discrepancy
@@ -37,12 +39,15 @@ A `NamedTuple` with fields:
 - `Gi`: APY inverse of the genomic relationship matrix ``G_{\\mathrm{APY}}^{-1}``.
 - `a_apy`: Direct genomic values computed using APY inverse.
 - `a_full`: Direct genomic values computed using exact full inverse.
+- `bulls`: The bulls with `core`, `dgv_full` and `dgv_apy` added.
 """
 function ex_12_2()
     println("Example 12.2: APY inverse of G")
 
-    # 1. Load data and construct full G
-    (; M, dyd, id, ref, σ²a, σ²e) = data_11()
+    # 1. Genotyped bulls (in the row order of M) and the full G
+    (; bulls, M, σ²a, σ²e) = data_11()
+    id = bulls.id
+    isref = bulls.set .== "reference"
     _, p, _ = center_genotypes(M)
     G = grm(Matrix{Int8}(M'), p)
 
@@ -50,9 +55,19 @@ function ex_12_2()
     core = findall(in([15, 20, 22, 26]), id)
     nc = setdiff(1:14, core)
 
-    # 3. Compute APY inverse
+    # 3. APY inverse, written out: with P = G_cc⁻¹ G_cn and the diagonal
+    #    M_nn = diag(g_ii - g_ic G_cc⁻¹ g_ci),
+    #    G⁻¹_APY = [G_cc⁻¹ + P M_nn⁻¹ P'  -P M_nn⁻¹; -M_nn⁻¹ P'  M_nn⁻¹]
     Gi = apy_ginv(G, core)
-    Mnn = 1 ./ diag(Gi)[nc]
+    Gcci = inv(G[core, core])
+    Pc = Gcci * G[core, nc]
+    Mnn = [G[i, i] - G[i, core]' * Gcci * G[core, i] for i in nc]
+    Ge = zeros(size(G))
+    Ge[core, core] = Gcci + Pc * Diagonal(1 ./ Mnn) * Pc'
+    Ge[core, nc] = -Pc * Diagonal(1 ./ Mnn)
+    Ge[nc, core] = Ge[core, nc]'
+    Ge[nc, nc] = Diagonal(1 ./ Mnn)
+    check("G⁻¹_APY from blocks = apy_ginv()", Ge, Matrix(Gi); atol = 1e-10)
     check(
         "diag(Mₙₙ)",
         Mnn,
@@ -83,13 +98,22 @@ function ex_12_2()
     )
     check("non-core block is diagonal", nnz(Gi[nc, nc]), length(nc); atol = 0)
 
-    # 4. Compare GBLUP solutions with APY vs full inverse
-    W = incidence(ref, 14)
-    dgv(K) = solve_mme(mme(dyd[ref], ones(8, 1), [RandomEffect(W, K, σ²a)]; σ²e))[2:end]
-    a_apy = dgv(Gi)
-    a_full = dgv(inv(G + 0.01I))
-
-    show_table(bull = id, full = a_full, APY = a_apy)
+    # 4. GBLUP with G⁻¹_APY and with the full inverse: [X'X X'W; W'X W'W + λK⁻¹]
+    y = bulls.dyd[isref]
+    X = ones(count(isref), 1)
+    W = incidence(findall(isref), nrow(bulls))
+    λ = σ²e / σ²a
+    function dgv(lab, Ki)
+        lhs = [X'X X'W; W'X W'W + λ * Ki]
+        m = mme(y, X, [RandomEffect(W, Ki, σ²a)]; σ²e)
+        check("$lab: mme() LHS = [X'X X'W; W'X W'W + λK⁻¹]", m.lhs, lhs; atol = 1e-10)
+        (lhs \ [X'y; W'y])[2:end]
+    end
+    a_apy = dgv("APY", Gi)
+    a_full = dgv("full", inv(G + 0.01I))
+    bulls.core = in(Set([15, 20, 22, 26])).(id)
+    bulls.dgv_full, bulls.dgv_apy = a_full, a_apy
+    show_table(bulls)
     # Note: the book omits the minus sign of bull 17 (-0.471)
     check(
         "DGV with G⁻¹_APY",
@@ -113,5 +137,5 @@ function ex_12_2()
     )
     check("cor(full, APY)", cor(a_full, a_apy), 0.95; atol = 0.005)
 
-    (; Gi, a_apy, a_full)
+    (; Gi, a_apy, a_full, bulls)
 end

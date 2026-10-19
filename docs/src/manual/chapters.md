@@ -218,7 +218,9 @@ Integration of genotyped and non-genotyped animals into unified national evaluat
   ```
 - **`ex_12_2` (Section 12.4)**: Algorithm for Proven and Young (APY)
   sparse genomic inversion, partitioning genotyped animals into core and
-  non-core subsets.
+  non-core subsets. $G^{-1}_{\mathrm{APY}}$ is built from its blocks and
+  checked against `apy_ginv`; DGV with the APY and the full inverse are
+  compared in the bull table.
 
 ---
 

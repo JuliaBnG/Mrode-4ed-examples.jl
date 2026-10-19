@@ -63,7 +63,14 @@ Extends the mixed model to traits recorded multiple times across an animal's lif
 ## Chapter 6: Multivariate Models
 
 Simultaneous genetic evaluation of multiple genetically correlated traits:
-- **`ex_06_1` (Section 6.1)**: Bivariate animal model for pre-weaning gain (WWG) and post-weaning gain (PWG) with complete records.
+- **`ex_06_1` (Section 6.1)**: Bivariate animal model for pre-weaning
+  gain (WWG) and post-weaning gain (PWG) with complete records, on one
+  data table. The MME are written out with `kron`,
+  $[R_0^{-1}\otimes X'X\ R_0^{-1}\otimes X'Z;\ R_0^{-1}\otimes Z'X\
+  R_0^{-1}\otimes Z'Z + G_0^{-1}\otimes A^{-1}]$, and checked against
+  the general set-up with `mt_stack`, `mt_blocks` and `mt_rinv`.
+  Multi-trait and univariate EBV, PEV and reliabilities are added as
+  columns.
 - **`ex_06_2` (Section 6.2)**: Unequal design and missing traits across animals.
 - **`ex_06_3` (Section 6.3)**: Partition of multivariate EBVs and multi-trait reliability calculations.
 - **`ex_06_4` (Section 6.4)**: Multivariate analysis with zero residual covariance (e.g. traits measured on different animals).

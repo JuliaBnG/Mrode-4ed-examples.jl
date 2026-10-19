@@ -37,18 +37,34 @@ where:
   (residual correlation ``r_e = 11 / \\sqrt{40 \\times 30} = 0.318``).
 
 # Key Concepts Illustrated
-1. **Multi-Trait BLUP**: Stacking data and setting up block Kronecker structures with
-   `mt_stack`, `mt_blocks`, and `mt_rinv`.
-2. **Comparison with Univariate BLUP**: Demonstrating changes in EBV ranking and
+1. **One table for the data**: pedigree, sex and both traits of all 8 animals
+   in one `DataFrame`; all animal-level results (multi-trait and univariate
+   EBV, PEV, reliabilities) are added as columns.
+2. **Multi-Trait BLUP**: with equal design matrices and no missing records,
+   and traits stacked (``y = \\mathrm{vec}(Y)``), the MME are
+   ```math
+   \\begin{bmatrix}
+   R_0^{-1} \\otimes X'X & R_0^{-1} \\otimes X'Z \\\\
+   R_0^{-1} \\otimes Z'X & R_0^{-1} \\otimes Z'Z + G_0^{-1} \\otimes A^{-1}
+   \\end{bmatrix}
+   \\begin{bmatrix}\\hat{b} \\\\ \\hat{a}\\end{bmatrix} =
+   \\begin{bmatrix}(R_0^{-1} \\otimes X') y \\\\ (R_0^{-1} \\otimes Z') y\\end{bmatrix},
+   ```
+   written out with `kron` and compared with the general set-up by
+   `mt_stack`, `mt_blocks`, and `mt_rinv`, which also handles missing records
+   and different design matrices per trait.
+3. **Comparison with Univariate BLUP**: Demonstrating changes in EBV ranking and
    information borrowing due to genetic and environmental covariances.
-3. **Multi-Trait Reliabilities** (Section 6.2.4):
+4. **Multi-Trait Reliabilities** (Section 6.2.4):
    Prediction error variance matrix ``P = \\mathrm{diag}(C^{22})``, with
    ``r_{ij}^2 = 1 - P_{ij} / G_{0, jj}``.
-4. **Multi-Trait EBV Partition** (Section 6.2.3):
+5. **Multi-Trait EBV Partition** (Section 6.2.3):
    Matrix decomposition ``\\hat{a}_i = W_1 \\mathrm{PA}_i + W_2 \\mathrm{YD}_i``.
 
 # Returns
 A `NamedTuple` with fields:
+- `ped`: The data with columns `ebv_wwg`, `ebv_pwg`, `uni_wwg`, `uni_pwg`,
+  `pev_wwg`, `pev_pwg`, `r2_wwg` and `r2_pwg` added.
 - `b`: Fixed sex effects for WWG and PWG.
 - `a`: Matrix of estimated breeding values (rows: 8 animals, cols: WWG and PWG).
 - `P`: Prediction error variances (PEV) for each animal and trait.
@@ -56,20 +72,44 @@ A `NamedTuple` with fields:
 function ex_06_1()
     println("Example 6.1: bivariate analysis of WWG and PWG")
 
-    # 1. Pedigree, animals, and multi-trait records
-    ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 4, 3], dam = [0, 0, 0, 0, 2, 2, 5, 6])
-    calf = 4:8
-    sex = ["M", "F", "F", "M", "M"]
-    Y = [4.5 6.8; 2.9 5.0; 3.9 6.8; 3.5 6.0; 5.0 7.5]  # col 1: WWG, col 2: PWG
+    # 1. Pedigree and records of both traits, one row per animal
+    #    (IDs are row numbers; founders 1–3 have no records)
+    no3 = fill(missing, 3)
+    ped = DataFrame(
+        calf = 1:8,
+        sex = [no3; ["M", "F", "F", "M", "M"]],
+        sire = [0, 0, 0, 1, 3, 1, 4, 3],
+        dam = [0, 0, 0, 0, 2, 2, 5, 6],
+        wwg = [no3; [4.5, 2.9, 3.9, 3.5, 5.0]],
+        pwg = [no3; [6.8, 5.0, 6.8, 6.0, 7.5]],
+    )
+    @assert ped.calf == 1:nrow(ped)
+    rec = dropmissing(ped, [:wwg, :pwg])        # no missing records in this example
+    calf = rec.calf
+    Y = Matrix(rec[:, [:wwg, :pwg]])            # col 1: WWG, col 2: PWG
+    println(ped)
 
     # 2. Covariance matrices
     G0 = [20.0 18.0; 18.0 40.0]                         # genetic covariance
     R0 = [40.0 11.0; 11.0 30.0]                         # residual covariance
 
-    # 3. Setup multi-trait incidence matrices and MME
+    # 3. Incidence matrices, the same for both traits
     Ai = ainv(ped)
-    X, _ = incidence(sex; levels = ["M", "F"])
-    Z = incidence(calf, 8)
+    X, _ = incidence(rec.sex; levels = ["M", "F"])
+    Z = incidence(calf, nrow(ped))
+
+    # 3a. MME written out. With equal design matrices and no missing records,
+    #     traits stacked (y = vec(Y)), var(e) = R₀ ⊗ I and var(a) = G₀ ⊗ A:
+    #     [R₀⁻¹⊗X'X  R₀⁻¹⊗X'Z; R₀⁻¹⊗Z'X  R₀⁻¹⊗Z'Z + G₀⁻¹⊗A⁻¹]
+    Ri = inv(R0)
+    lhs = [
+        kron(Ri, X'X)  kron(Ri, X'Z)
+        kron(Ri, Z'X)  kron(Ri, Z'Z) + kron(inv(G0), Ai)
+    ]
+    rhs = [kron(Ri, X'); kron(Ri, Z')] * vec(Y)
+
+    # 3b. The same equations with mt_stack, mt_blocks and mt_rinv, which also
+    #     handle missing records and different design matrices per trait
     y, obs = mt_stack(Y)
     m = mme(
         y,
@@ -77,20 +117,26 @@ function ex_06_1()
         [RandomEffect(mt_blocks(obs, [Z, Z]), Ai, G0; name = "animal")];
         Rinv = mt_rinv(R0, obs),
     )
+    check("mme() LHS = Kronecker form", m.lhs, lhs; atol = 1e-12)
+    check("mme() RHS = Kronecker form", m.rhs, rhs; atol = 1e-12)
 
     # 4. Solve multi-trait MME and compare with univariate models
-    x = solve_mme(m)
-    b, (a,) = solutions(m, x)
+    x = lhs \ rhs
+    b = x[m.blocks[1]]
+    a = reshape(x[m.blocks[2]], :, 2)           # rows: animals, cols: WWG and PWG
     xw, _ = univariate(Y[:, 1], X, Z, Ai, 20.0, 40.0)
     xp, _ = univariate(Y[:, 2], X, Z, Ai, 40.0, 30.0)
 
+    println("\nSex effects:")
     show_table(
-        effect = ["male", "female", string.(1:8)...],
-        WWG = x[[1, 2, 5:12...]],
-        PWG = x[[3, 4, 13:20...]],
-        WWG_uni = xw,
-        PWG_uni = xp,
+        sex = ["M", "F"],
+        WWG = b[1:2],
+        PWG = b[3:4],
+        WWG_uni = xw[1:2],
+        PWG_uni = xp[1:2],
     )
+    ped.ebv_wwg, ped.ebv_pwg = a[:, 1], a[:, 2]
+    ped.uni_wwg, ped.uni_pwg = xw[3:end], xp[3:end]
     check("sex (WWG, PWG)", b, [4.361, 3.397, 6.800, 5.880])
     check(
         "animals, WWG",
@@ -117,13 +163,8 @@ function ex_06_1()
     P = pev(m, 1)
     r² = 1 .- P ./ diag(G0)'
 
-    show_table(
-        animal = 1:8,
-        PEV_WWG = P[:, 1],
-        PEV_PWG = P[:, 2],
-        r2_WWG = r²[:, 1],
-        r2_PWG = r²[:, 2],
-    )
+    ped.pev_wwg, ped.pev_pwg = P[:, 1], P[:, 2]
+    ped.r2_wwg, ped.r2_pwg = r²[:, 1], r²[:, 2]
     check(
         "PEV (diagonals of C⁻¹)",
         P,
@@ -156,8 +197,8 @@ function ex_06_1()
 
     # 6. Multi-trait partition: â₈ = W₁ PA + W₂ YD (Section 6.2.3)
     Ri = inv(R0)
-    ZRZ = [i in calf ? Ri : zeros(2, 2) for i = 1:8]
-    yd = zeros(8, 2)
+    ZRZ = [i in calf ? Ri : zeros(2, 2) for i = 1:nrow(ped)]
+    yd = zeros(nrow(ped), 2)
     yd[calf, :] = Y - [X * b[1:2] X * b[3:4]]
     p = ebv_partition_mt(ped.sire, ped.dam, G0, ZRZ, yd, a)
 
@@ -170,5 +211,10 @@ function ex_06_1()
         atol = 1e-10,
     )
 
-    (; b, a, P)
+    println("\nData with multi-trait and univariate EBV:")
+    show_table(ped[:, [:calf, :sire, :dam, :wwg, :pwg, :ebv_wwg, :uni_wwg, :ebv_pwg, :uni_pwg]])
+    println("\nPrediction error variances and reliabilities:")
+    show_table(ped[:, [:calf, :pev_wwg, :pev_pwg, :r2_wwg, :r2_pwg]])
+
+    (; ped, b, a, P)
 end

@@ -22,8 +22,19 @@ function boa(Ks, nulls)
         [RandomEffect([Zp[1], Zx[1]], Ks[1], S1), RandomEffect([Zp[2], Zx[2]], Ks[2], S2)];
         Rinv = rinv,
     )
+    #    written out: crossbred records have their own residual variance, so the
+    #    MME are in the general R⁻¹ form with W = [Z₁ Zₓ₁ Z₂ Zₓ₂] and, per breed,
+    #    the two-trait block S⁻¹ ⊗ K⁻¹ (purebred and crossbred performance)
+    Ri = Diagonal(rinv)
+    W = [Zp[1] Zx[1] Zp[2] Zx[2]]
+    Σ = blockdiag(sparse(kron(inv(S1), Ks[1])), sparse(kron(inv(S2), Ks[2])))
+    lhs = [
+        X'Ri*X  X'Ri*W
+        W'Ri*X  W'Ri*W + Σ
+    ]
+    check("BOA: mme(; Rinv) LHS = general form", m.lhs, lhs; atol = 1e-10)
     zero = reduce(vcat, [m.blocks[k+1][[nulls[k]; nulls[k] .+ n]] for k = 1:2])
-    b, (g1, g2) = solutions(m, solve_mme(m; zero))
+    b, (g1, g2) = solutions(m, solve_mme(lhs, [X'Ri*y; W'Ri*y]; zero))
     (; b, g1, g2)
 end
 
@@ -52,8 +63,17 @@ purebred lines.
    (prints ``g_{11} = 1.815`` instead of ``0.607``), but Table 14.9 follows Eqn 14.25
    exactly and is reproduced here.
 
+# Tables and MME
+The animals are kept in one table with their breed group, herd and record; the
+purebred and crossbred solutions of both models are added as columns. Crossbred records
+have their own residual variance ``\\sigma_x^2``, so the MME are in the general ``R^{-1}``
+form with ``W = [Z_1\\ Z_{x1}\\ Z_2\\ Z_{x2}]`` and ``S_p^{-1} \\otimes K_p^{-1}`` per breed;
+they are written out in `boa` and compared with `mme`.
+
 # Returns
 A `NamedTuple` with fields:
+- `animals`: The animals with pedigree (`u1`, `uc1`, `u2`, `uc2`) and genomic
+  (`gu1`, `guc1`, `gu2`, `guc2`) solutions added.
 - `r`: Results from pedigree BOA model (Example 14.3).
 - `s`: Results from genomic BOA model (Example 14.4).
 """
@@ -61,7 +81,7 @@ function ex_14_3()
     println("Example 14.3: breed of origin of alleles, pedigree")
 
     # 1. Pedigree BOA (Example 14.3)
-    (; ped, group) = data_14_3()
+    (; ped, animals, group) = data_14_3()
     founder = Float64[group .== 1 group .== 2] .* (ped.sire .== 0)
     F = breed_composition(ped, founder)
     A = [partial_nrm(ped, F[:, p]) for p = 1:2]
@@ -78,13 +98,7 @@ function ex_14_3()
     Ks = nzinv.(A)
     r = boa(first.(Ks), last.(Ks))
 
-    show_table(
-        animal = 1:12,
-        breed1 = r.g1[:, 1],
-        cross1 = r.g1[:, 2],
-        breed2 = r.g2[:, 1],
-        cross2 = r.g2[:, 2],
-    )
+    animals.u1, animals.uc1, animals.u2, animals.uc2 = eachcol([r.g1 r.g2])
     check(
         "herd effects (breed 1, breed 2, crossbred)",
         r.b,
@@ -178,13 +192,10 @@ function ex_14_3()
     end
 
     s = boa(Ks_g, nulls_g)
-    show_table(
-        animal = 1:12,
-        breed1 = s.g1[:, 1],
-        cross1 = s.g1[:, 2],
-        breed2 = s.g2[:, 1],
-        cross2 = s.g2[:, 2],
-    )
+    animals.gu1, animals.guc1, animals.gu2, animals.guc2 = eachcol([s.g1 s.g2])
+    println("\nPurebred (u) and crossbred (uc) performance of breed-1 and breed-2 alleles,")
+    println("pedigree (Example 14.3) and genomic (g…, Example 14.4):")
+    show_table(animals)
     check("herd effects", s.b, [12.955, 12.054, 15.801, 17.062, 20.070, 20.940])
     check(
         "breed 1 and crossbred 1",
@@ -223,5 +234,5 @@ function ex_14_3()
         ],
     )
 
-    (; r, s)
+    (; r, s, animals)
 end

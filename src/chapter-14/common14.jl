@@ -51,7 +51,8 @@ end
 
 Pedigree (12 animals: purebred breed 1, purebred breed 2, and crossbred F1 progeny),
 herd allocations, records, and genetic covariance matrices for Examples 14.3 and 14.4
-(Christensen et al., 2014).
+(Christensen et al., 2014). `animals` holds pedigree, breed group, herd and record in
+one table, one row per animal (IDs are row numbers).
 """
 function data_14_3()
     ped = DataFrame(
@@ -59,11 +60,22 @@ function data_14_3()
         dam = [0, 0, 2, 3, 0, 0, 6, 7, 6, 7, 2, 3],
     )
     group = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]        # breed 1, breed 2, crossbred
+    herd = [2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2]
+    y = collect(11.0:22.0)
+    animals = DataFrame(
+        id = 1:12,
+        sire = ped.sire,
+        dam = ped.dam,
+        group = ["breed 1", "breed 2", "crossbred"][group],
+        herd = herd,
+        y = y,
+    )
     (;
         ped,
+        animals,
         group,
-        herd = [2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2],
-        y = collect(11.0:22.0),
+        herd,
+        y,
         S1 = [1.0 0.92; 0.92 1.5],
         S2 = [2.0 1.385; 1.385 1.5],
         σ²e = 4.0,

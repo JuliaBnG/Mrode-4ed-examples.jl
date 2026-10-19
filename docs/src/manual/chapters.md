@@ -258,7 +258,10 @@ Linear models for multibreed populations and commercial crossbreds:
   all solutions are columns of a table of animals.
 - **`ex_14_3` (Section 14.7)**: Breed of Origin of Alleles (BOA)
   evaluations using pedigree and genomic tracking of breed-specific
-  alleles.
+  alleles. Crossbred records have their own residual variance, so the
+  MME are written out in the general $R^{-1}$ form and checked against
+  `mme`; purebred and crossbred solutions of both models are columns of
+  a table of animals.
 
 ---
 

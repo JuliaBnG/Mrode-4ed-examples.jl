@@ -44,7 +44,7 @@ Covers basic linear mixed model equations (MME) for single-trait evaluations:
 ## Chapter 5: Models for Repeated Records
 
 Extends the mixed model to traits recorded multiple times across an animal's lifetime:
-- **`ex_05_1` (Section 5.1)**: Univariate repeatability animal model
+- **`ex_05_1` (Section 5.2)**: Univariate repeatability animal model
   with permanent environmental effects ($pe$). Uses two tables, the
   pedigree (one row per animal) and the records (one row per
   lactation); yield deviations come from `groupby`/`combine` and are
@@ -63,7 +63,7 @@ Extends the mixed model to traits recorded multiple times across an animal's lif
 ## Chapter 6: Multivariate Models
 
 Simultaneous genetic evaluation of multiple genetically correlated traits:
-- **`ex_06_1` (Section 6.1)**: Bivariate animal model for pre-weaning
+- **`ex_06_1` (Section 6.2)**: Bivariate animal model for pre-weaning
   gain (WWG) and post-weaning gain (PWG) with complete records, on one
   data table. The MME are written out with `kron`,
   $[R_0^{-1}\otimes X'X\ R_0^{-1}\otimes X'Z;\ R_0^{-1}\otimes Z'X\
@@ -77,51 +77,82 @@ Simultaneous genetic evaluation of multiple genetically correlated traits:
   $R^{-1}$ (each calf contributes $(R_0[S,S])^{-1}$ on its observed
   traits $S$), and checked against `mt_stack`, `mt_blocks` and
   `mt_rinv`.
-- **`ex_06_3` (Section 6.3)**: Partition of multivariate EBVs and multi-trait reliability calculations.
-- **`ex_06_4` (Section 6.4)**: Multivariate analysis with zero residual covariance (e.g. traits measured on different animals).
-- **`ex_06_5` (Section 6.5)**: Multiple Across Country Evaluation (MACE) formulation for international dairy evaluations.
+- **`ex_06_3` (Section 6.4)**: Fat yield in parities 1 and 2 as
+  different traits with unequal design matrices. The lactation records
+  of `ex_05_1` are reshaped to one row per cow with `unstack`; the MME
+  are written out with $\mathrm{blockdiag}(X_1, X_2)$ and checked
+  against `mt_stack`, `mt_blocks` and `mt_rinv`. Computes the
+  multi-trait DYD of sire 1 (Section 6.4.2).
+- **`ex_06_4` (Section 6.5.1)**: Multivariate analysis with zero
+  residual covariance (e.g. traits measured on different animals).
+- **`ex_06_5` (Section 6.5.2)**: Multi-trait across-country evaluation
+  (MACE) of bulls with a sire–maternal-grandsire model and phantom
+  groups, and the partition of MACE proofs.
 
 ---
 
 ## Chapter 8: Maternal Effects Models
 
 Models accounting for both the direct genetic ability of an animal and the maternal genetic/environmental contribution of its dam:
-- **`ex_08_1` (Section 8.1)**: Maternal animal model with correlated direct ($a$) and maternal ($m$) genetic effects ($\sigma_{am}$ covariance).
-- **`ex_08_2` (Section 8.2)**: Maternal Reduced Animal Model (RAM).
+- **`ex_08_1` (Section 8.2)**: Maternal animal model with correlated
+  direct ($a$) and maternal ($m$) genetic effects ($\sigma_{am}$
+  covariance).
+- **`ex_08_2` (Section 8.3)**: Maternal Reduced Animal Model (RAM).
 
 ---
 
 ## Chapter 9: Social Interaction Models
 
 Evaluates indirect genetic effects (IGE) / associative effects in group-housed animals:
-- **`ex_09_1` (Section 9.1)**: Mixed model with direct breeding values ($a_D$) and social breeding values ($a_S$) under pen-level housing and correlated group environmental effects. Partition of total breeding values ($TBV_i = a_{D,i} + (n-1)a_{S,i}$).
+- **`ex_09_1` (Sections 9.2–9.4)**: Mixed model with direct ($a_D$) and
+  social ($a_S$) breeding values of pigs in pens, with a random group
+  effect, and the equivalent correlated-residual model (Section 9.4).
+  Partition of DBV and SBV (Section 9.3), and total breeding values
+  ($TBV_i = a_{D,i} + (n-1)a_{S,i}$).
 
 ---
 
 ## Chapter 10: Random Regression Models
 
 Models continuous longitudinal or trajectory traits (e.g. test-day milk yields):
-- **`ex_10_1` (Section 10.1)**: Fixed regression test-day model with Ali-Schaeffer lactation curves.
-- **`ex_10_2` (Section 10.2)**: Random regression test-day model using orthogonal Legendre polynomials for animal genetic and permanent environmental trajectories. Calculation of 305-day cumulative lactation breeding values and reliabilities.
-- **`ex_10_3` (Section 10.4)**: Random regression using linear splines and covariance functions.
+- **`ex_10_1` (Section 10.2)**: Fixed regression test-day model with one
+  lactation curve of normalized Legendre polynomials of order 4, and
+  animal and permanent environment effects.
+- **`ex_10_2` (Section 10.3)**: Random regression test-day model using
+  orthogonal Legendre polynomials for animal genetic and permanent
+  environmental trajectories. Calculation of 305-day cumulative
+  lactation breeding values and reliabilities.
+- **`ex_10_3` (Sections 10.4 and 10.3.5)**: Random regression using
+  linear splines and covariance functions.
 
 ---
 
 ## Chapter 11: Genomic Selection & The Bayesian Alphabet
 
 Comprehensive genomic evaluation incorporating high-density marker panels:
-- **`ex_11_1` (Section 11.2)**: Fixed regression on individual QTL/SNP genotypes.
-- **`ex_11_2` (Section 11.3)**: Ridge regression BLUP / SNP-BLUP estimating individual SNP allele substitution effects.
-- **`ex_11_3` (Sections 11.4–11.5)**: Genomic BLUP (GBLUP) using VanRaden's first genomic relationship matrix ($G$), back-solving marker effects from GEBVs, selection index, and genomic reliabilities.
-- **`ex_11_6` (Section 11.6)**: Estimation of base population allele frequencies via Generalized Least Squares (GLS).
-- **`ex_11_7` (Section 11.7)**: GBLUP with residual polygenic effect blending ($G^* = w G + (1-w) A_{22}$).
-- **`ex_11_8` (Section 11.8)**: Haplotype-based genomic prediction models.
-- **`ex_11_9` (Sections 11.9–11.12)**: The Bayesian Alphabet:
+- **`ex_11_1` (Section 11.3)**: SNP effects fitted as fixed effects
+  together with a random polygenic (animal) effect, without and with EDC
+  weights.
+- **`ex_11_2` (Section 11.4.1)**: Ridge regression BLUP / SNP-BLUP
+  estimating individual SNP allele substitution effects.
+- **`ex_11_3` (Sections 11.4.2–11.4.5 and 11.9)**: Genomic BLUP (GBLUP)
+  using VanRaden's first genomic relationship matrix ($G$), back-solving
+  marker effects from GEBVs, selection index, and genomic reliabilities.
+- **`ex_11_6` (Section 11.4.6)**: Base-population allele frequencies and
+  gene content of ungenotyped ancestors by the linear method of Gengler
+  et al. (2007), compared with the GLS estimator.
+- **`ex_11_7` (Section 11.5)**: SNP-BLUP and GBLUP with a residual
+  polygenic effect $u \sim N(0, A\sigma^2_u)$ (10 % of $\sigma^2_a$),
+  fitted as a separate random effect.
+- **`ex_11_8` (Section 11.6)**: Haplotype-based genomic prediction
+  models.
+- **`ex_11_9` (Section 11.7)**: The Bayesian Alphabet:
   - **BayesA**: Student-$t$ prior via locus-specific scaled inverse chi-square variance draws.
   - **BayesB**: Point mass mixture prior (variable selection with locus-specific variances).
   - **BayesC**: Point mass mixture prior with a common genetic variance.
   - **BayesC$\pi$**: Joint sampling of marker inclusion probability $\pi$.
-- **`ex_11_13` (Section 11.13)**: Multivariate GBLUP for multi-trait genomic predictions.
+- **`ex_11_13` (Section 11.8)**: Multivariate GBLUP for multi-trait
+  genomic predictions.
 
 ---
 
@@ -132,15 +163,19 @@ Integration of genotyped and non-genotyped animals into unified national evaluat
   ```math
   H^{-1} = A^{-1} + \begin{bmatrix} 0 & 0 \\ 0 & G^{-1} - A_{22}^{-1} \end{bmatrix}
   ```
-- **`ex_12_2` (Section 12.2)**: Algorithm for Proven and Young (APY) sparse genomic inversion, partitioning genotyped animals into core and non-core subsets.
+- **`ex_12_2` (Section 12.4)**: Algorithm for Proven and Young (APY)
+  sparse genomic inversion, partitioning genotyped animals into core and
+  non-core subsets.
 
 ---
 
 ## Chapter 13: Non-Additive Genetic Models
 
 Partitioning non-additive genetic variation for commercial crossing and mating allocation:
-- **`ex_13_1`–`ex_13_2` (Sections 13.1–13.2)**: Pedigree-based dominance relationship matrix ($D$) and dominance BLUP.
-- **`ex_13_3` (Sections 13.3–13.4)**: Genomic dominance relationship matrices and estimation of genomic inbreeding depression.
+- **`ex_13_1`–`ex_13_2` (Sections 13.2–13.3)**: Pedigree-based dominance
+  relationship matrix ($D$) and dominance BLUP.
+- **`ex_13_3` (Section 13.4)**: Genomic dominance relationship matrices
+  and estimation of genomic inbreeding depression.
 - **`ex_13_5` (Section 13.5)**: Additive-by-additive ($A \odot A$ or $G \odot G$) epistatic relationship models.
 
 ---
@@ -148,16 +183,24 @@ Partitioning non-additive genetic variation for commercial crossing and mating a
 ## Chapter 14: Crossbreeding & Breed of Origin of Alleles
 
 Linear models for multibreed populations and commercial crossbreds:
-- **`ex_14_1` (Sections 14.1–14.2)**: Partial relationship matrices for multi-breed evaluations and reduced-rank approximations.
-- **`ex_14_3` (Sections 14.3–14.4)**: Breed of Origin of Alleles (BOA) evaluations using pedigree and genomic tracking of breed-specific alleles.
+- **`ex_14_1` (Sections 14.2–14.4)**: Multibreed animal model with
+  breed-specific partial relationship matrices, the equivalent combined
+  model for total merit, and its random-regression approximation
+  (Example 14.2).
+- **`ex_14_3` (Section 14.7)**: Breed of Origin of Alleles (BOA)
+  evaluations using pedigree and genomic tracking of breed-specific
+  alleles.
 
 ---
 
 ## Chapter 15: Non-Linear & Threshold Models
 
 Evaluation of categorical and disease resistance traits:
-- **`ex_15_1` (Section 15.1)**: Gianola & Foulley threshold animal model for binary/ordinal traits on the underlying liability scale.
-- **`ex_15_2` (Section 15.2)**: Joint analysis of continuous and binary threshold traits.
+- **`ex_15_1` (Section 15.2)**: Threshold (probit) sire model for
+  calving ease in three ordered categories (Gianola & Foulley, 1983) on
+  the underlying liability scale.
+- **`ex_15_2` (Section 15.3)**: Joint analysis of continuous and binary
+  threshold traits.
 
 ---
 
@@ -172,16 +215,21 @@ Estimation of genetic and residual variance components:
 ## Chapter 18: Bayesian Analysis & Gibbs Sampling
 
 Markov Chain Monte Carlo (MCMC) Bayesian parameter estimation:
-- **`ex_18_1` (Section 18.1)**: Univariate animal model Gibbs sampler with replayed pseudo-random deviates and posterior chain convergence.
-- **`ex_18_2` (Section 18.2)**: Multivariate block Gibbs sampler with inverse-Wishart covariance updates for $R$ and $G$.
+- **`ex_18_1` (Section 18.2)**: Univariate animal model Gibbs sampler
+  with replayed pseudo-random deviates and posterior chain convergence.
+- **`ex_18_2` (Section 18.3)**: Multivariate block Gibbs sampler with
+  inverse-Wishart covariance updates for $R$ and $G$.
 
 ---
 
 ## Chapter 19: Iterative Solvers for Large-Scale Systems
 
 High-performance linear solvers for systems with millions of equations:
-- **`ex_19_1` (Sections 19.1–19.2)**: Stationary iterative solvers (Jacobi with relaxation and Gauss-Seidel).
-- **`ex_19_3` (Sections 19.3, 19.4, 19.6)**: Iteration on Data (IOD) for massive pedigrees:
+- **`ex_19_1` (Section 19.4)**: Stationary iterative solvers (Jacobi
+  with relaxation and Gauss-Seidel).
+- **`ex_19_3` (Sections 19.5.1, 19.5.2 and 19.6)**: Iteration on Data
+  (IOD) for massive pedigrees:
   - Gauss-Seidel on data without and with genetic groups.
   - Preconditioned Conjugate Gradient (PCG) on data using matrix-free operations ($C \cdot d$).
-- **`ex_19_5` (Section 19.5)**: Reduced Animal Model with maternal effects solved via Gauss-Seidel iteration.
+- **`ex_19_5` (Section 19.5.3)**: Reduced Animal Model with maternal
+  effects solved via Gauss-Seidel iteration.

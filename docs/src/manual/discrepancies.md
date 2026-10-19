@@ -21,7 +21,7 @@ To ensure reproducibility, `Mrode4edExamples.jl` checks computed solutions again
 
 ## Chapter 10: Random Regression Models
 
-- **Example 10.1 (Ali-Schaeffer Lactation Curve)**:
+- **Example 10.1 (Legendre Fixed Lactation Curve)**:
   The lactation curve values printed from Days in Milk (DIM) 174 onward do not correspond to $\Phi \hat{b}_2$ as defined by the regression covariates.
 - **Example 10.2 (Legendre Polynomials & Trajectory Variance)**:
   The scalar $k'Pk$ is printed as $323463$, whereas evaluation with the book's own trajectory vector $t$ and projection matrix $P$ yields $320126$. The text uses 4-decimal rounded Legendre coefficients in intermediate steps.
@@ -34,7 +34,7 @@ To ensure reproducibility, `Mrode4edExamples.jl` checks computed solutions again
   Selection candidates are labelled 25–30 in the text. For bull 17, the SNP-BLUP direct genomic value (DGV) is printed without its negative sign (printed as positive 12.1 instead of $-12.1$).
 - **Example 11.6 (Base Population Allele Frequencies)**:
   The GLS base allele frequency of $0.575$ printed in the text cannot be reproduced from the stated GLS equation ($0.526$ unweighted or $0.590$ weighted).
-- **Example 11.7 (Polygenic Effect Blending)**:
+- **Example 11.7 (Residual Polygenic Effect)**:
   The columns labelled "DGV" in Table 11.4 actually represent $\mathrm{DGV} + \text{polygenic effect}$, and the polygenic effects utilize the printed five-generation numerator relationship matrix $A$.
 - **Example 11.8 (Haplotype Models)**:
   In animal 5's pseudo-SNP genotype string (block 2), a typographical substitution occurred in the book. As a result, $G_h$, $2\sum p q = 4.42$, and the haplotype GBLUP values in the text follow from the typo. The printed correlation of $0.999$ between SNP and haplotype evaluations is actually $0.992$ when evaluated from the book's own published solution vector.
@@ -54,7 +54,7 @@ To ensure reproducibility, `Mrode4edExamples.jl` checks computed solutions again
 
 ## Chapter 14: Crossbreeding Models
 
-- **Example 14.2 (Reduced-Rank Multi-Breed Approximation)**:
+- **Example 14.2 (Random-Regression Multibreed Approximation)**:
   Table 14.3 lists $\sqrt{f_p} u_p$ rather than the raw breed solutions $u_p$.
 - **Example 14.3 (Breed of Origin - Pedigree)**:
   Printed solutions match within $0.005$, but founder solutions are not perfectly symmetric for exchangeable founder lineages.

@@ -32,6 +32,18 @@ Instead of solving full linear systems each cycle, residuals
 e_{\\mathrm{new}} = e_{\\mathrm{old}} + z_j g_{j,\\mathrm{old}} - z_j g_{j,\\mathrm{new}}
 ```
 
+# Tables
+The posterior mean SNP effects of the four methods are collected, next to the
+book's values, in one table of SNPs (with inclusion probabilities for BayesB and
+BayesCπ), and the DGV ``M\\hat{g}`` of all bulls of each method are added as
+columns of the bull table, so the methods can be compared on the candidates.
+
+# Note on a Monomorphic SNP
+SNP 7 is 0 in all reference bulls (``z_7'z_7 = 0``), so the data carry no information
+on it and its inclusion probability should equal the prior ``1 - \\pi``. `bayes_snp`
+evaluates ``\\log 0`` and ``0/0`` in the likelihood of such a SNP and reports inclusion
+1 (BayesB) or 0 (BayesC, BayesCπ); its posterior mean effect is ≈ 0 either way.
+
 # Note on Monte Carlo Verification
 The book's first iteration values depend on its specific random numbers, and its posterior
 means (based on only 7,000 samples) carry noticeable Monte Carlo error. Here, the
@@ -44,11 +56,13 @@ A `Dict{Symbol, BayesResult}` with keys `:A`, `:B`, `:C`, `:Cpi`.
 function ex_11_9(; niter = 50_000, burnin = 10_000)
     println("Examples 11.9–11.12: Bayesian SNP models")
 
-    # 1. Load data and setup prior hyperparameters
-    (; M, dyd, ref) = data_11()
-    y = dyd[ref]
-    Z = Float64.(M[ref, :])
-    X = ones(8, 1)
+    # 1. Reference bulls (from the table of genotyped bulls, in the row order
+    #    of M), uncentred genotypes and prior hyperparameters
+    (; bulls, M) = data_11()
+    isref = bulls.set .== "reference"
+    y = bulls.dyd[isref]
+    Z = Float64.(M[isref, :])
+    X = ones(count(isref), 1)
     ν, σ²g0 = 4.012, 0.702
     S = σ²g0 * (ν - 2) / ν
     check("S = σ̃²(ν − 2)/ν", S, 0.352)
@@ -100,6 +114,7 @@ function ex_11_9(; niter = 50_000, burnin = 10_000)
 
     # 3. Run MCMC chains for BayesA, BayesB, BayesC, BayesCπ
     res = Dict{Symbol,BayesResult}()
+    snps = DataFrame(snp = 1:10)
     for method in (:A, :B, :C, :Cpi)
         r = bayes_snp(
             y,
@@ -116,8 +131,11 @@ function ex_11_9(; niter = 50_000, burnin = 10_000)
         )
         res[method] = r
         bk = book[method]
+        snps[!, "g_$method"] = r.g
+        snps[!, "book_$method"] = bk.g
+        method in (:B, :Cpi) && (snps[!, "incl_$method"] = r.inclusion)
+        bulls[!, "dgv_$method"] = Float64.(M) * r.g     # DGV of all bulls
         println(" Bayes", method, ": ", r.nsample, " samples")
-        show_table(SNP = 1:10, g = r.g, book = bk.g, σ²g = r.σ²g, inclusion = r.inclusion)
         @printf(
             "  posterior means: b = %.3f (book %.3f), σ²e = %.2f (book %.2f), π = %.2f\n",
             r.b[1],
@@ -141,6 +159,16 @@ function ex_11_9(; niter = 50_000, burnin = 10_000)
         mean(res[:B].σ²g),
         res[:Cpi].π
     )
+
+    # Note: SNP 7 is 0 in all reference bulls (z'z = 0), so the data carry no
+    # information on it and its inclusion probability should be the prior 1 - π.
+    # Breeding.bayes_snp evaluates log(0) and 0/0 for such a SNP, and reports
+    # inclusion 1 (BayesB) or 0 (BayesC/Cπ); its posterior mean effect is ≈ 0
+    # either way.
+    println("\nPosterior mean SNP effects (and inclusion probabilities) with the book's values:")
+    show_table(snps)
+    println("\nDGV of the bulls (uncentred genotypes, without the mean):")
+    show_table(bulls)
 
     res
 end

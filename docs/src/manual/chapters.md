@@ -192,7 +192,9 @@ Comprehensive genomic evaluation incorporating high-density marker panels:
   against `pseudo_snps`), $G_h = Z_hZ_h'/2\sum pq$, and GBLUP with $G$
   and $G_h$ written out and checked against `mme`; DGV of all models in
   a table of animals.
-- **`ex_11_9` (Section 11.7)**: The Bayesian Alphabet:
+- **`ex_11_9` (Section 11.7)**: The Bayesian Alphabet, with posterior
+  mean SNP effects of all methods next to the book's values in one table
+  of SNPs, and the DGV of each method as columns of the bull table:
   - **BayesA**: Student-$t$ prior via locus-specific scaled inverse chi-square variance draws.
   - **BayesB**: Point mass mixture prior (variable selection with locus-specific variances).
   - **BayesC**: Point mass mixture prior with a common genetic variance.

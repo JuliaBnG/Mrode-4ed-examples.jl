@@ -1,5 +1,5 @@
 """
-    ex_19_3() -> Nothing
+    ex_19_3() -> DataFrame
 
 Run Examples 19.3, 19.4, and 19.6 from Mrode & Pocrnic (2023): Iteration on Data (IOD)
 for the animal model:
@@ -30,8 +30,14 @@ Solves ``C\\mathbf{x} = \\mathbf{r}`` matrix-free via the action ``C \\mathbf{d}
 ```
 with diagonal preconditioner ``M = \\mathrm{diag}(C)``.
 
+# Written Out
+PCG is written as an explicit loop on the matrix-free product ``C\\mathbf{p}`` of the
+data scan and compared with `pcg`. The solutions of Gauss–Seidel on data, PCG and the
+direct solution of the MME are collected in a table.
+
 # Returns
-Nothing: the iterates and solutions are printed and checked against the book.
+The table of solutions (`effect`, `gauss_seidel_iod`, `pcg`, `direct`); the iterates
+are printed and checked against the book.
 """
 function ex_19_3()
     (; ped, calf, sex, y, m, x0, α) = data_19()
@@ -67,8 +73,9 @@ function ex_19_3()
 
     # Step 2: IOD with unknown parent groups (UPG 9 and 10)
     println("Example 19.4: … with unknown parent groups 9 and 10")
-    sg = [9, 9, 9, 1, 3, 1, 4, 3]
-    dg = [10, 10, 10, 10, 2, 2, 5, 6]
+    #    unknown sires → group 9, unknown dams → group 10 (equations 11 and 12)
+    sg = replace(ped.sire, 0 => 9)
+    dg = replace(ped.dam, 0 => 10)
     iodg = AnimalModelIOD(y, [sex], calf, sg, dg, α)
     xg0 = [x0; 0; 0]
     x, it, conv, H = gauss_seidel(iodg; x0 = xg0, tol = 1e-7, history = true)
@@ -157,5 +164,34 @@ function ex_19_3()
         [4.359, 3.404, 0.098, -0.019, -0.041, -0.009, -0.186, 0.177, -0.249, 0.183],
     )
     println("  converged after ", it, " rounds (book: 10)")
-    nothing
+
+    #    PCG written out on the matrix-free product C·p = iod(q, p), with the
+    #    diagonal preconditioner M: from x = 0, r = b, z = M⁻¹r, p = z, each round
+    #    α = r'z / p'Cp, x += αp, r -= αCp, z = M⁻¹r, β = r'z (new) / r'z (old), p = z + βp
+    b = rhs(iod)
+    xp = zeros(length(b))
+    rp = copy(b)
+    zp = rp ./ D
+    pp = copy(zp)
+    q = similar(b)
+    for _ = 1:it
+        iod(q, pp)
+        αk = (rp'zp) / (pp'q)
+        xp += αk * pp
+        rz = rp'zp
+        rp -= αk * q
+        zp = rp ./ D
+        pp = zp + (rp'zp) / rz * pp
+    end
+    check("PCG written out = pcg() (last round)", xp, x; atol = 1e-10)
+
+    sol = DataFrame(
+        effect = ["male"; "female"; "animal " .* string.(1:8)],
+        gauss_seidel_iod = gauss_seidel(iod; x0, tol = 1e-12)[1],
+        pcg = x,
+        direct = solve_mme(m),
+    )
+    println("\nSolutions: Gauss–Seidel on data, PCG on data and direct solution of the MME:")
+    show_table(sol)
+    sol
 end

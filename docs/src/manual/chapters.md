@@ -326,7 +326,9 @@ High-performance linear solvers for systems with millions of equations:
   and `gauss_seidel`, and the convergence criterion of both is tabulated
   by round.
 - **`ex_19_3` (Sections 19.5.1, 19.5.2 and 19.6)**: Iteration on Data
-  (IOD) for massive pedigrees:
+  (IOD) for massive pedigrees; PCG is also written out as an explicit
+  loop on the matrix-free product $C\cdot p$ and checked against `pcg`,
+  and the solutions of all solvers are compared in a table:
   - Gauss-Seidel on data without and with genetic groups.
   - Preconditioned Conjugate Gradient (PCG) on data using matrix-free operations ($C \cdot d$).
 - **`ex_19_5` (Section 19.5.3)**: Reduced Animal Model with maternal

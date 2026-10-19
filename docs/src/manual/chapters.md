@@ -18,7 +18,12 @@ Covers basic linear mixed model equations (MME) for single-trait evaluations:
   decomposition of breeding values into Parent Average
   ($\mathrm{PA}$), Yield Deviation ($\mathrm{YD}$), and Progeny
   Contribution ($\mathrm{PC}$).
-- **`ex_04_2` (Section 4.4)**: Sire model using sire relationship matrix $A_s^{-1}$ and evaluation of transmitting abilities.
+- **`ex_04_2` (Section 4.4)**: Sire model on the data table of
+  `ex_04_1`, with the sire pedigree derived from it and recoded for
+  $A_s^{-1}$. The MME $[X'X\ X'Z_s;\ Z_s'X\ Z_s'Z_s + \alpha_s A_s^{-1}]$
+  are written out and checked against `mme`. Sire solutions are shown
+  next to $\frac{1}{2}\hat{a}$ of the animal model: $s = \frac{1}{2}a$,
+  but here the estimates even rank the sires differently.
 - **`ex_04_3` (Section 4.5)**: Reduced Animal Model (RAM), absorbing non-parent equations to reduce system dimensionality.
 - **`ex_04_4` (Section 4.6)**: Animal model incorporating genetic groups / unknown parent groups (UPG) using the $QP$ formulation.
 

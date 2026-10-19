@@ -57,9 +57,8 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaBnG/Mrode-4ed-examples.jl")
 ```
 
-The package depends on `Breeding` from its GitHub repository (see
-`[sources]` in `Project.toml`) until its registration in General is
-merged.
+Its dependencies, including `Breeding` (≥ 0.1.6) and
+`RelationshipMatrices`, are installed from the General registry.
 
 ## Usage
 

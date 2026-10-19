@@ -9,5 +9,4 @@ RelationshipMatrices = "d4d45922-7dca-4708-ac5a-a6dbb0551829"
 Documenter = "1"
 
 [sources]
-Breeding = {url = "https://github.com/JuliaBnG/Breeding.jl", rev = "main"}
 Mrode4edExamples = {path = ".."}

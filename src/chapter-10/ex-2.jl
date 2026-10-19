@@ -217,7 +217,9 @@ function ex_10_2()
         atol = 1e-10,
     )
 
-    println("\nPedigree with random regression coefficients, 305-day values and reliabilities:")
+    println(
+        "\nPedigree with random regression coefficients, 305-day values and reliabilities:",
+    )
     show_table(ped; digits = 4)
 
     (; ped, rec, b, u, pe, rel)

@@ -62,7 +62,8 @@ function ex_05_1()
 
     # 1. Pedigree, one row per animal (IDs are row numbers), and the
     #    lactation records, one row per record
-    ped = DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
+    ped =
+        DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
     rec = DataFrame(
         cow = repeat(4:8; inner = 2),
         parity = repeat([1, 2], 5),
@@ -88,20 +89,19 @@ function ex_05_1()
     println("\nrank(X) = ", rank(Matrix(X)), " with ", size(X, 2), " columns")
 
     # 4. MME, written out (R = Iσ²e)
+    #! format: off
     lhs = [
         X'X  X'Z               X'W
         Z'X  Z'Z + λa * Ai     Z'W
         W'X  W'Z               W'W + λpe * I
     ]
+    #! format: on
     rhs = [X'y; Z'y; W'y]
 
     m = mme(
         y,
         X,
-        [
-            RandomEffect(Z, Ai, σ²a; name = "animal"),
-            RandomEffect(W, I, σ²pe; name = "pe"),
-        ];
+        [RandomEffect(Z, Ai, σ²a; name = "animal"), RandomEffect(W, I, σ²pe; name = "pe")];
         σ²e,
     )
     check("mme() LHS = explicit form", m.lhs, lhs; atol = 1e-12)
@@ -128,7 +128,12 @@ function ex_05_1()
     ydev = combine(groupby(rec, :cow), nrow => :n, :yadj => mean => :YD)
     leftjoin!(ped, ydev; on = :id => :cow)
     ped.n = coalesce.(ped.n, 0)
-    check("YD of cows 4, 6 and 8", ped.YD[[4, 6, 8]], [23.4005, -38.486, 44.432]; atol = 2e-3)
+    check(
+        "YD of cows 4, 6 and 8",
+        ped.YD[[4, 6, 8]],
+        [23.4005, -38.486, 44.432];
+        atol = 2e-3,
+    )
 
     # 7. Partition of EBV, and DYD of the sires
     p = ebv_partition(ped.sire, ped.dam, λa, ped.n, coalesce.(ped.YD, 0.0), a)

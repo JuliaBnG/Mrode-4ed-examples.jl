@@ -111,6 +111,8 @@ function ex_19_1()
     rounds = DataFrame(round = 1:20, conv_jacobi = convj, conv_gauss_seidel = convg)
     println("\nConvergence criterion by round:")
     fmt = ByRow(v -> @sprintf("%.1e", v))
-    println(transform(rounds, [:conv_jacobi, :conv_gauss_seidel] .=> fmt; renamecols = false))
+    println(
+        transform(rounds, [:conv_jacobi, :conv_gauss_seidel] .=> fmt; renamecols = false),
+    )
     rounds
 end

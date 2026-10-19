@@ -110,10 +110,12 @@ function ex_11_3()
     y = bulls.dyd[isref]
     X = ones(count(isref), 1)
     W = incidence(findall(isref), nrow(bulls))  # records → rows of G
+    #! format: off
     lhs = [
         X'X  X'W
         W'X  W'W + λ * Gi
     ]
+    #! format: on
     rhs = [X'y; W'y]
     m = mme(y, X, [RandomEffect(W, Gi, σ²a)]; σ²e)
     check("mme() LHS = [X'X X'W; W'X W'W + λG⁻¹]", m.lhs, lhs; atol = 1e-10)

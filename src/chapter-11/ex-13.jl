@@ -81,10 +81,12 @@ function ex_11_13()
     Gi = inv(G + 0.01I)
     Ri = inv(R0)
     n = nrow(calves)
+    #! format: off
     lhs = [
         kron(Ri, X'X)  kron(Ri, X')
         kron(Ri, X)    kron(Ri, I(n)) + kron(inv(G0), Gi)
     ]
+    #! format: on
     rhs = [kron(Ri, X'); kron(Ri, I(n))] * vec(Y)
     y, obs = mt_stack(Y)
     m = mme(
@@ -105,13 +107,19 @@ function ex_11_13()
     #    records, A of the 8-animal pedigree), EBV of calves 4–8
     ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 4, 3], dam = [0, 0, 0, 0, 2, 2, 5, 6])
     Z = incidence(calves.calf, nrow(ped))
+    #! format: off
     xa = [
         kron(Ri, X'X)  kron(Ri, X'Z)
         kron(Ri, Z'X)  kron(Ri, Z'Z) + kron(inv(G0), ainv(ped))
     ] \ ([kron(Ri, X'); kron(Ri, Z')] * vec(Y))
+    #! format: on
     ea = reshape(xa[5:end], :, 2)[calves.calf, :]
     calves.ebv_wwg, calves.ebv_pwg = ea[:, 1], ea[:, 2]
-    check("pedigree EBV = Example 6.1 (WWG, calves 4–8)", ea[:, 1], [-0.010, -0.270, 0.276, -0.316, 0.244])
+    check(
+        "pedigree EBV = Example 6.1 (WWG, calves 4–8)",
+        ea[:, 1],
+        [-0.010, -0.270, 0.276, -0.316, 0.244],
+    )
     println("\nCalves: genomic (DGV) and pedigree-based (EBV, Example 6.1) values:")
     show_table(calves)
     check("sex (WWG, PWG)", b, [4.323, 3.416, 6.753, 5.921])

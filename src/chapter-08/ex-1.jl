@@ -107,12 +107,14 @@ function ex_08_1()
     α = σ²e * inv(G0)
     λpe = σ²e / σ²pe
     check("variance ratios α", α, [2.647 1.176; 1.176 4.412])
+    #! format: off
     lhs = [
         X'X  X'Z                   X'W                   X'S
         Z'X  Z'Z + α[1, 1] * Ai    Z'W + α[1, 2] * Ai    Z'S
         W'X  W'Z + α[2, 1] * Ai    W'W + α[2, 2] * Ai    W'S
         S'X  S'Z                   S'W                   S'S + λpe * I
     ]
+    #! format: on
     rhs = [X'y; Z'y; W'y; S'y]
 
     m = mme(

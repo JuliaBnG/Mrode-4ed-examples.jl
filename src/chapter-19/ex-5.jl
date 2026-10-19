@@ -50,7 +50,12 @@ function ex_19_5()
     S, dams = incidence(rec.dam)
 
     # Step 2: Form RAM MME
-    m = mme(rec.bw, X, [RandomEffect([Z1, Z2], Api, G0), RandomEffect(S, I, σ²pe)]; Rinv = rinv)
+    m = mme(
+        rec.bw,
+        X,
+        [RandomEffect([Z1, Z2], Api, G0), RandomEffect(S, I, σ²pe)];
+        Rinv = rinv,
+    )
     check("1/σ²e, 1/(σ²e + ½g₁₁)", rinv[[1, 6]], [0.002857, 1 / 425]; atol = 1e-6)
 
     # Step 3: Gauss–Seidel iteration on the singular system
@@ -109,7 +114,7 @@ function ex_19_5()
     @printf("  herd 1: %.3f here, 0 with the constraint\n", x[1])
 
     np = length(parents)
-    sol = DataFrame(parent = parents, direct = x[5 .+ (1:np)], maternal = x[5 + np .+ (1:np)])
+    sol = DataFrame(parent = parents, direct = x[5 .+ (1:np)], maternal = x[5+np .+ (1:np)])
     sol.pe = Vector{Union{Missing,Float64}}(missing, np)
     sol.pe[indexin(dams, parents)] = x[(end-length(dams)+1):end]
     println("\nParents: direct, maternal and maternal pe solutions:")

@@ -110,10 +110,12 @@ function ex_06_5()
     Ri = Diagonal(rec.rinv)
     isgroup = [falses(nrow(ped)); trues(nrow(groups))]
     stab = kron(I(2), Diagonal(Float64.(isgroup)))
+    #! format: off
     lhs = [
         X'Ri*X   X'Ri*Zb
         Zb'Ri*X  Zb'Ri*Zb + kron(inv(G0), Ai) + stab
     ]
+    #! format: on
     rhs = [X'Ri*y; Zb'Ri*y]
     check("X'R⁻¹X", Matrix(lhs[1:2, 1:2]), [1.2252 0; 0 1.6162]; atol = 1e-4)
 

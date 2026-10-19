@@ -154,7 +154,10 @@ function ex_15_1()
     j, y = rec.row, Float64.(rec.score)
     m = mme(y, X[j, :], [RandomEffect(Z[j, :], Ai, 1 / 19)]; σ²e = 1.0)
     x = solve_mme(m; zero = [1])
-    println("\nLinear model on the scores, herd 2, male and female: ", round.(x[2:4]; digits = 4))
+    println(
+        "\nLinear model on the scores, herd 2, male and female: ",
+        round.(x[2:4]; digits = 4),
+    )
 
     sires = DataFrame(sire = 1:4, s = r.u, se = se[7:10], s_linear = x[5:8])
     sires.P1, sires.P2, sires.P3 = eachcol(P)

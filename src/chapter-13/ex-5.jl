@@ -82,7 +82,10 @@ function ex_13_5()
     Ks = ((G, σ²a), (D, σ²d), (GAA, σ²aa))
     Kis = [inv(K + 0.01I) for (K, _) in Ks]
     T = [X Z Z Z]
-    Σ = blockdiag(spzeros(2, 2), (sparse(σ²e / σ² * Ki) for (Ki, (_, σ²)) in zip(Kis, Ks))...)
+    Σ = blockdiag(
+        spzeros(2, 2),
+        (sparse(σ²e / σ² * Ki) for (Ki, (_, σ²)) in zip(Kis, Ks))...,
+    )
     m = mme(y, X, [RandomEffect(Z, Ki, σ²) for (Ki, (_, σ²)) in zip(Kis, Ks)]; σ²e)
     check("mme() LHS = T'T + Σ", m.lhs, T'T + Σ; atol = 1e-10)
 

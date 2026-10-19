@@ -119,7 +119,12 @@ function ex_17_1()
         Vi = Diagonal(df ./ (2 .* (C * θe) .^ 2))
         θe = (C' * Vi * C) \ (C' * Vi * ms)
     end
-    check("OLS = C \\ ms, GLS iteration (fit_mean_squares)", [C \ ms; θe], [θ; θw]; atol = 1e-8)
+    check(
+        "OLS = C \\ ms, GLS iteration (fit_mean_squares)",
+        [C \ ms; θe],
+        [θ; θw];
+        atol = 1e-8,
+    )
 
     est = DataFrame(
         method = ["Henderson 3", "OLS", "iterated GLS"],

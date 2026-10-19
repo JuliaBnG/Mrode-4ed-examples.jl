@@ -34,7 +34,12 @@ function data_11()
     dyd = [9.0, 13.4, 12.7, 15.4, 5.9, 7.7, 10.2, 4.8, 7.6, 8.8, 9.8, 9.2, 11.5, 13.3]
     edc = [558, 722, 300, 73, 52, 87, 64, 103, 13, 125, 93, 66, 75, 33]
     id = 13:26
-    bulls = DataFrame(id = id, set = [fill("reference", 8); fill("candidate", 6)], dyd = dyd, edc = edc)
+    bulls = DataFrame(
+        id = id,
+        set = [fill("reference", 8); fill("candidate", 6)],
+        dyd = dyd,
+        edc = edc,
+    )
     (;
         ped = DataFrame(id = 1:26, sire = sire, dam = dam),
         bulls,

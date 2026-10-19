@@ -75,10 +75,12 @@ function ex_11_1()
     fits = [("unweighted", fill(1 / σ²e, nrow(ref))), ("weighted", ref.edc ./ σ²e)]
     res = map(fits) do (lab, rinv)
         Ri = Diagonal(rinv)
+        #! format: off
         lhs = [
             X'Ri*X  X'Ri*W
             W'Ri*X  W'Ri*W + Ai / σ²a
         ]
+        #! format: on
         rhs = [X'Ri*y; W'Ri*y]
         m = mme(y, X, [RandomEffect(W, Ai, σ²a)]; Rinv = rinv)
         check("$lab: mme(; Rinv) LHS = general form", m.lhs, lhs; atol = 1e-12)
@@ -89,7 +91,12 @@ function ex_11_1()
     end
     #    With R = Iσ²e, the λ form of mme(; σ²e) gives the same solutions
     m0 = mme(y, X, [RandomEffect(W, Ai, σ²a)]; σ²e)
-    check("unweighted: λ form = general form", solve_mme(m0), [res[1].b; res[1].u]; atol = 1e-10)
+    check(
+        "unweighted: λ form = general form",
+        solve_mme(m0),
+        [res[1].b; res[1].u];
+        atol = 1e-10,
+    )
 
     # 5. Results per bull: DGV = Z₃ĝ, polygenic û, GEBV = DGV + û
     for ((lab, _), r) in zip(fits, res)

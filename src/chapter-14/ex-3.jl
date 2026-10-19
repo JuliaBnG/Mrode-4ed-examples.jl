@@ -28,10 +28,12 @@ function boa(Ks, nulls)
     Ri = Diagonal(rinv)
     W = [Zp[1] Zx[1] Zp[2] Zx[2]]
     Σ = blockdiag(sparse(kron(inv(S1), Ks[1])), sparse(kron(inv(S2), Ks[2])))
+    #! format: off
     lhs = [
         X'Ri*X  X'Ri*W
         W'Ri*X  W'Ri*W + Σ
     ]
+    #! format: on
     check("BOA: mme(; Rinv) LHS = general form", m.lhs, lhs; atol = 1e-10)
     zero = reduce(vcat, [m.blocks[k+1][[nulls[k]; nulls[k] .+ n]] for k = 1:2])
     b, (g1, g2) = solutions(m, solve_mme(lhs, [X'Ri*y; W'Ri*y]; zero))

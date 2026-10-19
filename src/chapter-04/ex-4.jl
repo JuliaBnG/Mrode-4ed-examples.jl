@@ -95,10 +95,12 @@ function ex_04_4()
     )
 
     # 3. A*⁻¹ = [A⁻¹ -A⁻¹Q; -Q'A⁻¹ Q'A⁻¹Q], and directly by ainv_upg (Henderson's rules)
+    #! format: off
     Ast = [
         A0i      -A0i*Q
         -Q'*A0i  Q'*A0i*Q
     ]
+    #! format: on
     Ai = ainv_upg(ped)
     check("A*⁻¹ from blocks = ainv_upg(ped)", Matrix(Ai), Ast; atol = 1e-12)
     check(
@@ -112,11 +114,13 @@ function ex_04_4()
     y = rec.wwg
     X, _ = incidence(rec.sex; levels = ["M", "F"])
     Z = incidence(rec.calf, n)                  # records → animals 1:8
+    #! format: off
     lhs = [
         X'X           X'Z                spzeros(2, ng)
         Z'X           Z'Z + λ * A0i      -λ * A0i * Q
         spzeros(ng, 2)  -λ * Q' * A0i    λ * Q' * A0i * Q
     ]
+    #! format: on
     rhs = [X'y; Z'y; zeros(ng)]
 
     println("\nCoefficient matrix [X'X X'Z 0; Z'X Z'Z+λA⁻¹ -λA⁻¹Q; 0 -λQ'A⁻¹ λQ'A⁻¹Q]:")

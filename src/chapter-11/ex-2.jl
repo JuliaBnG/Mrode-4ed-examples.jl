@@ -58,10 +58,12 @@ function ex_11_2()
     fits = [("unweighted", fill(1 / σ²e, nrow(ref))), ("weighted", ref.edc ./ σ²e)]
     x, xw = map(fits) do (lab, rinv)
         Ri = Diagonal(rinv)
+        #! format: off
         lhs = [
             X'Ri*X   X'Ri*Zr
             Zr'Ri*X  Zr'Ri*Zr + I / σ²g
         ]
+        #! format: on
         rhs = [X'Ri*y; Zr'Ri*y]
         m = mme(y, X, [RandomEffect(Zr, I, σ²g)]; Rinv = rinv)
         check("$lab: mme(; Rinv) LHS = general form", m.lhs, lhs; atol = 1e-12)
@@ -74,8 +76,18 @@ function ex_11_2()
     snps = DataFrame(snp = 1:10, p = p, g_unweighted = x[2:end], g_weighted = xw[2:end])
     mono = [allequal(c) for c in eachcol(M[isref, :])]
     check("SNPs monomorphic in the reference", findall(mono), [7, 8]; atol = 0)
-    check("their effects are zero", [x[2:end][mono]; xw[2:end][mono]], zeros(4); atol = 1e-10)
-    println("\nMean: unweighted ", round(x[1]; digits = 3), ", weighted ", round(xw[1]; digits = 3))
+    check(
+        "their effects are zero",
+        [x[2:end][mono]; xw[2:end][mono]],
+        zeros(4);
+        atol = 1e-10,
+    )
+    println(
+        "\nMean: unweighted ",
+        round(x[1]; digits = 3),
+        ", weighted ",
+        round(xw[1]; digits = 3),
+    )
     show_table(snps)
 
     check(

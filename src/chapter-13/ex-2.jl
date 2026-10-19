@@ -50,10 +50,12 @@ function ex_13_2()
     y = rec.ww
     X, _ = incidence(rec.pen)
     Z = incidence(rec.pig, nrow(ped))
+    #! format: off
     lhs = [
         X'X  X'Z
         Z'X  Z'Z + σ²e * Vi
     ]
+    #! format: on
     m = mme(y, X, [RandomEffect(Z, Vi, 1.0)]; σ²e)
     check("mme() LHS = [X'X X'Z; Z'X Z'Z + σ²e V⁻¹]", m.lhs, lhs; atol = 1e-10)
     x = lhs \ [X'y; Z'y]
@@ -91,7 +93,7 @@ function ex_13_2()
     xs = (T'T + Σ) \ (T'y)
     N = nrow(ped)
     check("â = σ²a A V⁻¹ ĝ (Example 13.1)", a, xs[2 .+ (1:N)]; atol = 1e-8)
-    check("d̂ = σ²d D V⁻¹ ĝ (Example 13.1)", d, xs[2 + N .+ (1:N)]; atol = 1e-8)
+    check("d̂ = σ²d D V⁻¹ ĝ (Example 13.1)", d, xs[2+N .+ (1:N)]; atol = 1e-8)
 
     ped.g, ped.bv, ped.dv = g, a, d
     show_table(ped)

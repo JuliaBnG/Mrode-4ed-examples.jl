@@ -35,15 +35,7 @@ function data_14_1()
     y = collect(11.0:21.0)
     animals = DataFrame(id = 1:11, sire = ped.sire, dam = ped.dam, herd = herd, y = y)
     animals.f1, animals.f2 = F[:, 1], F[:, 2]
-    (;
-        ped,
-        animals,
-        F,
-        herd,
-        y,
-        σ² = [1.0, 2.0, 0.5],
-        σ²e = 4.0,
-    )
+    (; ped, animals, F, herd, y, σ² = [1.0, 2.0, 0.5], σ²e = 4.0)
 end
 
 """

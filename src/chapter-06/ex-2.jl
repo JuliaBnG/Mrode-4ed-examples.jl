@@ -88,17 +88,21 @@ function ex_06_2()
     println()
     #     Residual precision of the trait-major stacked records [WWG; PWG]
     D(j, k) = Diagonal(getindex.(Rs, j, k))
+    #! format: off
     Ri = [
         D(1, 1)  D(1, 2)
         D(2, 1)  D(2, 2)
     ]
+    #! format: on
     X2 = kron(I(2), X)                          # [X 0; 0 X]
     Z2 = kron(I(2), Z)                          # [Z 0; 0 Z]
     y0 = coalesce.(vec(Y), 0.0)                 # missing → 0; their R⁻¹ rows are 0
+    #! format: off
     lhs = [
         X2'Ri*X2  X2'Ri*Z2
         Z2'Ri*X2  Z2'Ri*Z2 + kron(inv(G0), Ai)
     ]
+    #! format: on
     rhs = [X2'Ri*y0; Z2'Ri*y0]
 
     # 4b. The same equations with mt_stack, mt_blocks and mt_rinv, where the

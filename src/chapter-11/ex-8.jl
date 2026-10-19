@@ -69,7 +69,7 @@ function ex_11_8()
     Pe = reduce(hcat, map(blocks) do b
         hb = collect(eachrow(H[:, b]))
         al = unique(hb)                         # alleles in order of appearance
-        [count(==(a), hb[2i-1:2i]) for i = 1:size(M, 1), a in al]
+        [count(==(a), hb[(2i-1):2i]) for i = 1:size(M, 1), a in al]
     end)
     check("pseudo-SNPs = pseudo_snps()", Pe, P; atol = 0)
 

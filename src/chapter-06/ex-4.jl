@@ -56,11 +56,10 @@ function ex_06_4()
     # 1. Pedigree and sex-limited records, one row per animal (IDs are row
     #    numbers): yearling weight on males 9–12, fat yield on females 13–17.
     #    Sex is given in the book for animal 4 and calves 9–17 only.
-    m8 = fill(missing, 8)
+    m3, m8 = fill(missing, 3), fill(missing, 8)
     ped = DataFrame(
         id = 1:17,
-        sex = [missing, missing, missing, "F", missing, missing, missing, missing,
-               "M", "M", "M", "M", "F", "F", "F", "F", "F"],
+        sex = [m3; "F"; fill(missing, 4); fill("M", 4); fill("F", 5)],
         sire = [0, 0, 0, 1, 0, 0, 0, 0, 1, 2, 1, 3, 1, 3, 2, 2, 3],
         dam = [0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 6, 0, 7, 8, 0, 13, 15],
         hys = [m8; [1, 2, 2, 1, 1, 2, 3, 2, 3]],
@@ -91,12 +90,14 @@ function ex_06_4()
     r11, r22 = 1 / R0[1, 1], 1 / R0[2, 2]
     Gi = inv(G0)
     O(A, B) = spzeros(size(A, 2), size(B, 2))
+    #! format: off
     lhs = [
         X1'X1*r11  O(X1, X2)  X1'Z1*r11               O(X1, Z2)
         O(X2, X1)  X2'X2*r22  O(X2, Z1)               X2'Z2*r22
         Z1'X1*r11  O(Z1, X2)  Z1'Z1*r11 + Gi[1, 1]*Ai Gi[1, 2]*Ai
         O(Z2, X1)  Z2'X2*r22  Gi[2, 1]*Ai             Z2'Z2*r22 + Gi[2, 2]*Ai
     ]
+    #! format: on
     rhs = [X1'y1 * r11; X2'y2 * r22; Z1'y1 * r11; Z2'y2 * r22]
     check("G₀⁻¹", Gi, [0.0311 -0.0186; -0.0186 0.0445]; atol = 1e-4)
 

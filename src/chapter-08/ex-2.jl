@@ -73,12 +73,14 @@ function ex_08_2()
     # 4. MME in the general form, since R ≠ Iσ²e
     Ri = Diagonal(rinv)
     Gi = inv(G0)
+    #! format: off
     lhs = [
         X'Ri*X   X'Ri*Z1                   X'Ri*Z2                   X'Ri*S
         Z1'Ri*X  Z1'Ri*Z1 + Gi[1, 1] * Api Z1'Ri*Z2 + Gi[1, 2] * Api Z1'Ri*S
         Z2'Ri*X  Z2'Ri*Z1 + Gi[2, 1] * Api Z2'Ri*Z2 + Gi[2, 2] * Api Z2'Ri*S
         S'Ri*X   S'Ri*Z1                   S'Ri*Z2                   S'Ri*S + I / σ²pe
     ]
+    #! format: on
     rhs = [X'Ri*y; Z1'Ri*y; Z2'Ri*y; S'Ri*y]
 
     m = mme(y, X, [RandomEffect([Z1, Z2], Api, G0), RandomEffect(S, I, σ²pe)]; Rinv = rinv)
@@ -125,12 +127,7 @@ function ex_08_2()
     Z = incidence(rec.calf, nrow(ped))
     W = incidence(rec.dam, nrow(ped))
     Ai = ainv(ped)
-    m_a = mme(
-        y,
-        X,
-        [RandomEffect([Z, W], Ai, G0), RandomEffect(S, I, σ²pe)];
-        σ²e,
-    )
+    m_a = mme(y, X, [RandomEffect([Z, W], Ai, G0), RandomEffect(S, I, σ²pe)]; σ²e)
     x_a = solve_mme(m_a; zero = [1])
     um_a = reshape(x_a[m_a.blocks[2]], :, 2)
     check("RAM = animal model, fixed effects", b, x_a[m_a.blocks[1]]; atol = 1e-8)

@@ -256,7 +256,9 @@ function ex_15_2()
     check("A⁻¹ (sire–MGS), first row", Ai[1, :], [1.424, 0.182, -0.667, -0.364, 0, 0])
 
     # Step 3: Design matrices and genetic covariance
-    X = [first(incidence(rec.origin)) first(incidence(rec.season)) first(incidence(rec.sex))]
+    X = [
+        first(incidence(rec.origin)) first(incidence(rec.season)) first(incidence(rec.sex))
+    ]
     Z, _ = incidence(rec.sire)
     G = [0.7178 0.1131; 0.1131 0.0466]
 
@@ -390,10 +392,12 @@ function ex_15_2()
     keepX = setdiff(1:6, [4, 6])
     Xk = X[:, keepX]
     R0i = inv(R0)
+    #! format: off
     lhs = [
         kron(R0i, Xk'Xk)  kron(R0i, Xk'Z)
         kron(R0i, Z'Xk)   kron(R0i, Z'Z) + kron(inv(G), Ai)
     ]
+    #! format: on
     rhs = [kron(R0i, Xk'); kron(R0i, Z')] * vec(Y)
     y, obs = mt_stack(Y)
     m = mme(
@@ -429,7 +433,8 @@ function ex_15_2()
         atol = 1e-3,
     )
 
-    sires = DataFrame(sire = 1:6, u1 = r.u1, ν = r.ν, u2 = r.ν + r.β * r.u1, P_difficult = V)
+    sires =
+        DataFrame(sire = 1:6, u1 = r.u1, ν = r.ν, u2 = r.ν + r.β * r.u1, P_difficult = V)
     sires.lin_bw, sires.lin_cd = u[:, 1], u[:, 2]
     println("\nSires: BW (u1) and liability (ν, u2 = ν + βu1) solutions, probability of")
     println("difficult calving (origin 2, season 1, male), and the linear-model solutions:")

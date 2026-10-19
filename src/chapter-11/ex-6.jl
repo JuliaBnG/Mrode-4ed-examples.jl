@@ -57,10 +57,12 @@ function ex_11_6()
     λ = 0.01
     X = ones(length(id), 1)
     W = incidence(id, nrow(ped))
+    #! format: off
     lhs = [
         X'X  X'W
         W'X  W'W + λ * Ai
     ]
+    #! format: on
     S = lhs \ [X'M; W'M]                       # (1 + 26) × 10: μ' on top of D
     μ, d = S[1, :], S[2:end, :]
     p = μ / 2

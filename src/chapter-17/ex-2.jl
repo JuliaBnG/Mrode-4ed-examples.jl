@@ -101,8 +101,14 @@ function ex_17_2()
     C = Matrix([X'X X'Z; Z'X Z'Z + σ²e0 / σ²a0 * Ai]) / σ²e0
     rh = W'y / σ²e0
     θ = C \ rh
-    logL0 = -(logdet(C) + logdet(inv(Matrix(Ai))) + N * log(σ²e0) + q * log(σ²a0) +
-              y'y / σ²e0 - θ'rh) / 2
+    logL0 =
+        -(
+            logdet(C) +
+            logdet(inv(Matrix(Ai))) +
+            N * log(σ²e0) +
+            q * log(σ²a0) +
+            y'y / σ²e0 - θ'rh
+        ) / 2
 
     # Step 3: AI-REML estimation
     r = reml(y, X, [a]; σ²e = 0.4, method = :ai)

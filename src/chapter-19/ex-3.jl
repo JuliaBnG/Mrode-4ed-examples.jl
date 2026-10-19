@@ -191,7 +191,9 @@ function ex_19_3()
         pcg = x,
         direct = solve_mme(m),
     )
-    println("\nSolutions: Gauss–Seidel on data, PCG on data and direct solution of the MME:")
+    println(
+        "\nSolutions: Gauss–Seidel on data, PCG on data and direct solution of the MME:",
+    )
     show_table(sol)
     sol
 end

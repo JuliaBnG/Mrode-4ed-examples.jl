@@ -92,8 +92,18 @@ function ex_09_1()
     V, _ = incidence(rec.pen)
     W, _ = incidence(rec.litter)
     ZS = (V * V' - I) * ZD
-    check("Z_S = associate_incidence()", ZS, associate_incidence(rec.pen, rec.pig, N); atol = 0)
-    check("Z_S (pen-mates)", Matrix(ZS[:, rec.pig]), kron(I(3), ones(3, 3) - I(3)); atol = 0)
+    check(
+        "Z_S = associate_incidence()",
+        ZS,
+        associate_incidence(rec.pen, rec.pig, N);
+        atol = 0,
+    )
+    check(
+        "Z_S (pen-mates)",
+        Matrix(ZS[:, rec.pig]),
+        kron(I(3), ones(3, 3) - I(3));
+        atol = 0,
+    )
 
     # 4. MME (Eqn 9.6), R = Iσ²e*: with T = [X Z_D Z_S V W], the coefficient
     #    matrix is T'T plus the variance ratios of the random effects, i.e. the

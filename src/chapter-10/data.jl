@@ -11,7 +11,8 @@ of normalized Legendre polynomials at the ten DIM (standardized over days
 4–310).
 """
 function data_10()
-    ped = DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
+    ped =
+        DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
     dims = [4, 38, 72, 106, 140, 174, 208, 242, 276, 310]
 
     # Table 10.1: one column per cow, one row per DIM

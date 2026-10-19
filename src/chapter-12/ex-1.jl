@@ -83,10 +83,12 @@ function ex_12_1()
     y = bulls.dyd[isref]
     X = ones(count(isref), 1)
     W = incidence(id[isref], nrow(ped))
+    #! format: off
     lhs = [
         X'X  X'W
         W'X  W'W + λ * Hi
     ]
+    #! format: on
     m = mme(y, X, [RandomEffect(W, Hi, σ²a)]; σ²e)
     check("mme() LHS = [X'X X'W; W'X W'W + λH⁻¹]", m.lhs, lhs; atol = 1e-10)
     x = lhs \ [X'y; W'y]

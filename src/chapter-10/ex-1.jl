@@ -72,7 +72,12 @@ function ex_10_1()
     Z = incidence(rec.cow, nrow(ped))               # random animal effect
     Q, cows = incidence(rec.cow)                    # random pe effect, cows 4–8
     Ai = ainv(ped)
-    check("X₁'X₁ = diag(records per HTD)", diag(X1'X1), [3, 3, 3, 4, 4, 5, 5, 5, 5, 5]; atol = 0)
+    check(
+        "X₁'X₁ = diag(records per HTD)",
+        diag(X1'X1),
+        [3, 3, 3, 4, 4, 5, 5, 5, 5, 5];
+        atol = 0,
+    )
 
     # 3. MME (R = Iσ²e): with T = [X₁ X₂ Z Q], the coefficient matrix is T'T plus
     #    λa A⁻¹ in the animal block and λpe I in the pe block

@@ -107,7 +107,7 @@ function ex_12_2()
         lhs = [X'X X'W; W'X W'W + λ * Ki]
         m = mme(y, X, [RandomEffect(W, Ki, σ²a)]; σ²e)
         check("$lab: mme() LHS = [X'X X'W; W'X W'W + λK⁻¹]", m.lhs, lhs; atol = 1e-10)
-        (lhs \ [X'y; W'y])[2:end]
+        (lhs\[X'y; W'y])[2:end]
     end
     a_apy = dgv("APY", Gi)
     a_full = dgv("full", inv(G + 0.01I))

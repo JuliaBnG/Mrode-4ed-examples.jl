@@ -85,11 +85,13 @@ function ex_05_2()
     Ai = ainv(ped)
 
     # 4. MME, written out (R = Iσ²e)
+    #! format: off
     lhs = [
         X'X  X'Z               X'W
         Z'X  Z'Z + λa * Ai     Z'W
         W'X  W'Z               W'W + λc * I
     ]
+    #! format: on
     rhs = [X'y; Z'y; W'y]
     x = lhs \ rhs
 

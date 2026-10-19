@@ -98,10 +98,12 @@ function ex_04_3()
     y = rec.wwg
     X, _ = incidence(rec.sex; levels = ["M", "F"])
     Ri = Diagonal(rinv)
+    #! format: off
     lhs = [
         X'Ri*X  X'Ri*W
         W'Ri*X  W'Ri*W + Api / σ²a
     ]
+    #! format: on
     rhs = [X'Ri*y; W'Ri*y]
     x = lhs \ rhs
 

@@ -94,20 +94,24 @@ function ex_04_1()
     # 4a. MME, general form: any R, e.g. heterogeneous residual variances.
     #     Here R = Iσ²e, so R⁻¹ is a diagonal of 1/σ²e.
     Ri = Diagonal(fill(1 / σ²e, length(y)))
+    #! format: off
     lhs_R = [
         X'Ri*X  X'Ri*Z
         Z'Ri*X  Z'Ri*Z + Ai / σ²a
     ]
+    #! format: on
     rhs_R = [X'Ri*y; Z'Ri*y]
     x_R = lhs_R \ rhs_R
 
     # 4b. R = Iσ²e: multiply the general form by σ²e. Only a single
     #     variance ratio λ is left, as printed in the book.
     λ = σ²e / σ²a                               # λ = (1 - h²) / h² = 2.0
+    #! format: off
     lhs = [
         X'X  X'Z
         Z'X  Z'Z + λ * Ai
     ]
+    #! format: on
     rhs = [X'y; Z'y]
     x = lhs \ rhs
 
@@ -144,9 +148,18 @@ function ex_04_1()
     ped.sep = sqrt.(ped.d .* σ²e)
     pev_R = diag(lhs_inverse(m_R))[m_R.blocks[2]]
 
-    check("diagonals of C⁻¹", ped.d, [0.471, 0.492, 0.456, 0.428, 0.428, 0.442, 0.442, 0.422])
+    check(
+        "diagonals of C⁻¹",
+        ped.d,
+        [0.471, 0.492, 0.456, 0.428, 0.428, 0.442, 0.442, 0.422],
+    )
     check("reliabilities", ped.r2, [0.058, 0.016, 0.088, 0.144, 0.144, 0.116, 0.116, 0.156])
-    check("SEP", ped.sep, [4.341, 4.436, 4.271, 4.138, 4.138, 4.205, 4.205, 4.109]; atol = 3e-3)
+    check(
+        "SEP",
+        ped.sep,
+        [4.341, 4.436, 4.271, 4.138, 4.138, 4.205, 4.205, 4.109];
+        atol = 3e-3,
+    )
     check("PEV of general form = dᵢ σ²e", pev_R, ped.d .* σ²e; atol = 1e-10)
     check("reliability() without inverting C", vec(reliability(m, 1)), ped.r2; atol = 1e-10)
 

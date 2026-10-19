@@ -63,7 +63,8 @@ function ex_06_3()
 
     # 1. Pedigree, one row per animal (IDs are row numbers), and the lactation
     #    records of Example 5.1, one row per record
-    ped = DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
+    ped =
+        DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
     @assert ped.id == 1:nrow(ped)
     rec = DataFrame(
         cow = repeat(4:8; inner = 2),
@@ -99,10 +100,12 @@ function ex_06_3()
     Xb = blockdiag(X1, X2)                      # [X₁ 0; 0 X₂]
     Zb = blockdiag(Z, Z)                        # [Z 0; 0 Z]
     Ri = kron(inv(R0), I(length(cow)))
+    #! format: off
     lhs = [
         Xb'Ri*Xb  Xb'Ri*Zb
         Zb'Ri*Xb  Zb'Ri*Zb + kron(inv(G0), Ai)
     ]
+    #! format: on
     rhs = [Xb'Ri*vec(Y); Zb'Ri*vec(Y)]
 
     # 4b. The same equations with mt_stack, mt_blocks and mt_rinv

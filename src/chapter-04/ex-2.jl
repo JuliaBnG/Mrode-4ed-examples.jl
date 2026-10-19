@@ -85,10 +85,12 @@ function ex_04_2()
     # so that parents still precede progeny
     code = Dict(id => i for (i, id) in enumerate(sires.id))
     Asi = ainv(DataFrame(sire = [get(code, p, 0) for p in sires.sire], dam = sires.dam))
+    #! format: off
     lhs = [
         X'X  X'Z
         Z'X  Z'Z + α * Asi
     ]
+    #! format: on
     rhs = [X'y; Z'y]
     x = lhs \ rhs
 

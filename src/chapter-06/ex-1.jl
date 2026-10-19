@@ -102,10 +102,12 @@ function ex_06_1()
     #     traits stacked (y = vec(Y)), var(e) = R₀ ⊗ I and var(a) = G₀ ⊗ A:
     #     [R₀⁻¹⊗X'X  R₀⁻¹⊗X'Z; R₀⁻¹⊗Z'X  R₀⁻¹⊗Z'Z + G₀⁻¹⊗A⁻¹]
     Ri = inv(R0)
+    #! format: off
     lhs = [
         kron(Ri, X'X)  kron(Ri, X'Z)
         kron(Ri, Z'X)  kron(Ri, Z'Z) + kron(inv(G0), Ai)
     ]
+    #! format: on
     rhs = [kron(Ri, X'); kron(Ri, Z')] * vec(Y)
 
     # 3b. The same equations with mt_stack, mt_blocks and mt_rinv, which also
@@ -212,7 +214,9 @@ function ex_06_1()
     )
 
     println("\nData with multi-trait and univariate EBV:")
-    show_table(ped[:, [:calf, :sire, :dam, :wwg, :pwg, :ebv_wwg, :uni_wwg, :ebv_pwg, :uni_pwg]])
+    show_table(
+        ped[:, [:calf, :sire, :dam, :wwg, :pwg, :ebv_wwg, :uni_wwg, :ebv_pwg, :uni_pwg]],
+    )
     println("\nPrediction error variances and reliabilities:")
     show_table(ped[:, [:calf, :pev_wwg, :pev_pwg, :r2_wwg, :r2_pwg]])
 

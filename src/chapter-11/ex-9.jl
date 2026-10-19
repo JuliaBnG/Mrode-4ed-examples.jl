@@ -168,7 +168,9 @@ function ex_11_9(; niter = 50_000, burnin = 10_000)
         [0.7, 1 - res[:Cpi].π];
         atol = 0.02,
     )
-    println("\nPosterior mean SNP effects (and inclusion probabilities) with the book's values:")
+    println(
+        "\nPosterior mean SNP effects (and inclusion probabilities) with the book's values:",
+    )
     show_table(snps)
     println("\nDGV of the bulls (uncentred genotypes, without the mean):")
     show_table(bulls)

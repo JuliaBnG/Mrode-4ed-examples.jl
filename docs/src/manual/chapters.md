@@ -253,7 +253,9 @@ Linear models for multibreed populations and commercial crossbreds:
 - **`ex_14_1` (Sections 14.2–14.4)**: Multibreed animal model with
   breed-specific partial relationship matrices, the equivalent combined
   model for total merit, and its random-regression approximation
-  (Example 14.2).
+  (Example 14.2). The MME of all three are written as $T'T + \Sigma$ and
+  checked against `mme`; breed fractions, segregation coefficients and
+  all solutions are columns of a table of animals.
 - **`ex_14_3` (Section 14.7)**: Breed of Origin of Alleles (BOA)
   evaluations using pedigree and genomic tracking of breed-specific
   alleles.

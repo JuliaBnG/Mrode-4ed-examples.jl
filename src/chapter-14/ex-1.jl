@@ -24,6 +24,13 @@ In crossbred and admixed populations with breeds 1 and 2:
    Approximates the partial relationship model using the standard pedigree ``A`` with
    covariables ``\\sqrt{f_1}, \\sqrt{f_2}, \\sqrt{h_{12}}``.
 
+# Tables and MME
+The animals are kept in one table with breed fractions, segregation coefficients and
+all solutions as columns. The MME of the three models are written out as ``T'T + \\Sigma``
+(``T = [X\\ Z_1\\ Z_2\\ Z_{12}]`` with generalized inverses of ``A_1, A_2, A_{12}``;
+``Z = I`` with ``\\sigma_e^2 G^{-1}``; and the random-regression covariables
+``\\sqrt{f_1}, \\sqrt{f_2}, \\sqrt{h_{12}}``) and compared with `mme`.
+
 # Returns
 A `NamedTuple` with fields:
 - `b`: Fixed effect solutions from the partial relationship model.
@@ -32,15 +39,18 @@ A `NamedTuple` with fields:
 - `br`: Fixed effect solutions from the random-regression model.
 - `ur`: Random-regression coefficients.
 - `bv`: Total breeding values from the random-regression model.
+- `animals`: The animals with `h12`, `u1`, `u2`, `u12`, `a` and `a_rr` added.
 """
 function ex_14_1()
     println("Example 14.1: breed-specific and combined multibreed models")
 
     # 1. Load pedigree, breed composition, and variance components
-    (; ped, F, herd, y, σ², σ²e) = data_14_1()
+    (; ped, animals, F, herd, y, σ², σ²e) = data_14_1()
+    n = nrow(animals)
 
     # 2. Compute segregation coefficients h₁₂ and partial relationship matrices A₁, A₂, A₁₂
     h12 = segregation_coefficients(ped, F, 1, 2)
+    animals.h12 = h12
     check(
         "f₁ and h₁₂",
         [F[:, 1] h12],
@@ -61,22 +71,28 @@ function ex_14_1()
     ms = [nzinv(A) for A in (A1, A2, A12)]
     Zs = [Diagonal(Float64.(c .> 0)) for c in (F[:, 1], F[:, 2], h12)]
     m = mme(y, X, [RandomEffect(Zs[k], ms[k][1], σ²[k]) for k = 1:3]; σ²e)
+    #    written out as T'T + Σ: each animal's record is linked to the breed
+    #    components it carries (Zₖ selects animals with fₖ > 0), and Σ holds
+    #    σ²e/σ²ₖ times the generalized inverses of A₁, A₂, A₁₂
+    T = [X reduce(hcat, Zs)]
+    Σ = blockdiag(
+        spzeros(size(X, 2), size(X, 2)),
+        (sparse(σ²e / σ²[k] * ms[k][1]) for k = 1:3)...,
+    )
+    check("Model 1: mme() LHS = T'T + Σ", m.lhs, T'T + Σ; atol = 1e-10)
     zero = [1; [m.blocks[k+1][ms[k][2]] for k = 1:3]...]
-    b, u = solutions(m, solve_mme(m; zero))
+    b, u = solutions(m, solve_mme(T'T + Σ, T'y; zero))
     u = reduce(hcat, u)
 
     # 4. Model 2: Equivalent combined model with G = A₁σ²₁ + A₂σ²₂ + A₁₂σ²₁₂
     G = σ²[1] * A1 + σ²[2] * A2 + σ²[3] * A12
-    mc = mme(y, X, [RandomEffect(I(11), inv(G), 1.0)]; σ²e)
-    bc, (a,) = solutions(mc, solve_mme(mc; zero = [1]))
-
-    show_table(
-        animal = 1:11,
-        combined = vec(a),
-        breed1 = u[:, 1],
-        breed2 = u[:, 2],
-        segregation = u[:, 3],
-    )
+    #    one record per animal, so Z = I: [X'X X'; X I + σ²e G⁻¹]
+    mc = mme(y, X, [RandomEffect(I(n), inv(G), 1.0)]; σ²e)
+    lhs_c = [X'X X'; X I + σ²e * inv(G)]
+    check("Model 2: mme() LHS = [X'X X'; X I + σ²e G⁻¹]", mc.lhs, lhs_c; atol = 1e-10)
+    bc, (a,) = solutions(mc, solve_mme(lhs_c, [X'y; y]; zero = [1]))
+    animals.u1, animals.u2, animals.u12 = eachcol(u)
+    animals.a = vec(a)
     check("fixed effects (herd, breed)", [b bc], repeat([0, -3.198, 16.613, 17.408], 1, 2))
     check(
         "breed 1, breed 2, segregation",
@@ -104,18 +120,20 @@ function ex_14_1()
     cs = (F[:, 1], F[:, 2], h12)
     ks = [nzinv(Diagonal(c .> 0) * A * Diagonal(c .> 0)) for c in cs]
     mr = mme(y, X, [RandomEffect(Diagonal(sqrt.(cs[k])), ks[k][1], σ²[k]) for k = 1:3]; σ²e)
+    #    written out: covariables √f₁, √f₂, √h₁₂ in T, the same pedigree A restricted
+    #    to the animals carrying each component in Σ
+    Tr = [X reduce(hcat, [Diagonal(sqrt.(c)) for c in cs])]
+    Σr = blockdiag(
+        spzeros(size(X, 2), size(X, 2)),
+        (sparse(σ²e / σ²[k] * ks[k][1]) for k = 1:3)...,
+    )
+    check("Example 14.2: mme() LHS = T'T + Σ", mr.lhs, Tr'Tr + Σr; atol = 1e-10)
     zr = [1; [mr.blocks[k+1][ks[k][2]] for k = 1:3]...]
-    br, ur = solutions(mr, solve_mme(mr; zero = zr))
+    br, ur = solutions(mr, solve_mme(Tr'Tr + Σr, Tr'y; zero = zr))
     ur = reduce(hcat, ur)
     bv = [sum(sqrt(cs[k][i]) * ur[i, k] for k = 1:3) for i = 1:11]
 
-    show_table(
-        animal = 1:11,
-        total = bv,
-        breed1 = ur[:, 1],
-        breed2 = ur[:, 2],
-        segregation = ur[:, 3],
-    )
+    animals.a_rr = bv
     check("fixed effects", br, [0, -3.051, 16.504, 17.462])
     # Note: Table 14.3 in the book lists the contributions √fₚ uₚ that sum to a*
     check(
@@ -141,5 +159,7 @@ function ex_14_1()
         [-0.333, 0.147, 0.298, -0.726, 0.104, 1.219, 0.427, 1.888, 1.286, 1.944, 1.597],
     )
 
-    (; b, u, a = vec(a), br, ur, bv)
+    show_table(animals)
+
+    (; b, u, a = vec(a), br, ur, bv, animals)
 end

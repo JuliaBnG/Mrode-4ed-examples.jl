@@ -19,6 +19,8 @@ end
 
 Pedigree (11 animals), founder breed fractions, management herds, phenotypes,
 and variance components for Examples 14.1 and 14.2 (García-Cortés & Toro, 2006).
+`animals` holds them in one table, one row per animal (IDs are row numbers), with the
+breed fractions `f1`, `f2` and the segregation coefficients `h12` added by the example.
 """
 function data_14_1()
     ped = DataFrame(
@@ -28,11 +30,17 @@ function data_14_1()
     founder = zeros(11, 2)
     founder[1:2, 1] .= 1
     founder[3:4, 2] .= 1
+    F = breed_composition(ped, founder)
+    herd = [2, 2, 2, 1, 1, 2, 2, 2, 1, 1, 1]
+    y = collect(11.0:21.0)
+    animals = DataFrame(id = 1:11, sire = ped.sire, dam = ped.dam, herd = herd, y = y)
+    animals.f1, animals.f2 = F[:, 1], F[:, 2]
     (;
         ped,
-        F = breed_composition(ped, founder),
-        herd = [2, 2, 2, 1, 1, 2, 2, 2, 1, 1, 1],
-        y = collect(11.0:21.0),
+        animals,
+        F,
+        herd,
+        y,
         σ² = [1.0, 2.0, 0.5],
         σ²e = 4.0,
     )

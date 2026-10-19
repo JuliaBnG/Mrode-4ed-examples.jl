@@ -21,9 +21,26 @@ where:
   ``R_0 = \\begin{bmatrix} 65.0 & 27.0 \\\\ 27.0 & 70.0 \\end{bmatrix}``.
 
 # Key Concepts Illustrated
-1. **Unequal Fixed Effects Design Matrices**: Combining different classification factors
-   for each trait in a multi-trait system.
-2. **Multi-Trait Daughter Yield Deviation (DYD)** (Section 6.4.2):
+1. **From repeated records to traits**: the lactation records of Example 5.1
+   (one row per record) are reshaped with `unstack` to one row per cow, with
+   fat yield and HYS of each parity as columns. Animal-level results are
+   added as columns of the pedigree.
+2. **Unequal Fixed Effects Design Matrices**: HYS 1–2 occur only in parity 1
+   and HYS 3–4 only in parity 2, so each trait has its own ``X_t``. The MME
+   of Example 6.1 hold with ``\\mathrm{blockdiag}(X_1, X_2)`` in place of
+   ``I_2 \\otimes X``:
+   ```math
+   \\begin{bmatrix}
+   X_b' R^{-1} X_b & X_b' R^{-1} Z_b \\\\
+   Z_b' R^{-1} X_b & Z_b' R^{-1} Z_b + G_0^{-1} \\otimes A^{-1}
+   \\end{bmatrix},
+   \\quad X_b = \\begin{bmatrix} X_1 & 0 \\\\ 0 & X_2 \\end{bmatrix},
+   \\quad Z_b = I_2 \\otimes Z,
+   \\quad R^{-1} = R_0^{-1} \\otimes I,
+   ```
+   written out explicitly and compared with `mt_stack`, `mt_blocks`, and
+   `mt_rinv`.
+3. **Multi-Trait Daughter Yield Deviation (DYD)** (Section 6.4.2):
    Computes matrix weights ``W_2^{\\mathrm{prog}}`` and ``M_3`` for calculating sire DYD
    from correlated multi-trait records of daughters.
 
@@ -34,6 +51,9 @@ instead of the book's printed ``[24.521, 32.154]'``.
 
 # Returns
 A `NamedTuple` with fields:
+- `ped`: The pedigree with columns `ebv_fat1`, `ebv_fat2`, `uni_fat1`, `uni_fat2`,
+  `dyd_fat1` and `dyd_fat2` added.
+- `cows`: The records reshaped to one row per cow.
 - `b`: Fixed HYS effect solutions for parities 1 and 2.
 - `a`: Matrix of estimated breeding values (rows: 8 animals, cols: parities 1 and 2).
 - `partition`: Results of the multi-trait partition and sire DYD calculation.
@@ -41,45 +61,80 @@ A `NamedTuple` with fields:
 function ex_06_3()
     println("Example 6.3: fat yield in parities 1 and 2 as different traits")
 
-    # 1. Pedigree, cows, and parity records
-    ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
-    cow = 4:8
-    hys1 = [1, 1, 2, 1, 2]
-    hys2 = [1, 2, 1, 1, 2]
-    Y = [201.0 280.0; 150.0 200.0; 160.0 190.0; 180.0 250.0; 285.0 300.0]
+    # 1. Pedigree, one row per animal (IDs are row numbers), and the lactation
+    #    records of Example 5.1, one row per record
+    ped = DataFrame(id = 1:8, sire = [0, 0, 0, 1, 3, 1, 3, 1], dam = [0, 0, 0, 2, 2, 5, 4, 7])
+    @assert ped.id == 1:nrow(ped)
+    rec = DataFrame(
+        cow = repeat(4:8; inner = 2),
+        parity = repeat([1, 2], 5),
+        hys = [1, 3, 1, 4, 2, 3, 1, 3, 2, 4],
+        fy = [201.0, 280.0, 150.0, 200.0, 160.0, 190.0, 180.0, 250.0, 285.0, 300.0],
+    )
 
-    # 2. Covariance matrices
+    # 2. Parities as different traits: reshape to one row per cow. HYS 1–2 occur
+    #    only in parity 1 and HYS 3–4 only in parity 2, so each trait has its
+    #    own fixed effects.
+    cows = innerjoin(
+        unstack(rec, :cow, :parity, :fy; renamecols = p -> "fat$p"),
+        unstack(rec, :cow, :parity, :hys; renamecols = p -> "hys$p");
+        on = :cow,
+    )
+    println(cows)
+    cow = cows.cow
+    Y = Matrix{Float64}(cows[:, [:fat1, :fat2]])
+
+    # 3. Covariance matrices
     R0 = [65.0 27.0; 27.0 70.0]
     G0 = [35.0 28.0; 28.0 30.0]
 
-    # 3. Unequal design matrices and multi-trait MME setup
+    # 4. Unequal design matrices: X₁ for HYS 1–2 (parity 1), X₂ for HYS 3–4 (parity 2)
     Ai = ainv(ped)
-    X1, _ = incidence(hys1)
-    X2, _ = incidence(hys2)
-    Z = incidence(cow, 8)
+    X1, lv1 = incidence(cows.hys1)
+    X2, lv2 = incidence(cows.hys2)
+    Z = incidence(cow, nrow(ped))
+
+    # 4a. MME written out: as in Example 6.1, but with blockdiag(X₁, X₂)
+    #     instead of I₂ ⊗ X. No missing records, so R⁻¹ = R₀⁻¹ ⊗ I.
+    Xb = blockdiag(X1, X2)                      # [X₁ 0; 0 X₂]
+    Zb = blockdiag(Z, Z)                        # [Z 0; 0 Z]
+    Ri = kron(inv(R0), I(length(cow)))
+    lhs = [
+        Xb'Ri*Xb  Xb'Ri*Zb
+        Zb'Ri*Xb  Zb'Ri*Zb + kron(inv(G0), Ai)
+    ]
+    rhs = [Xb'Ri*vec(Y); Zb'Ri*vec(Y)]
+
+    # 4b. The same equations with mt_stack, mt_blocks and mt_rinv
     y, obs = mt_stack(Y)
     m = mme(
         y,
         reduce(hcat, mt_blocks(obs, [X1, X2])),
-        [RandomEffect(mt_blocks(obs, [Z, Z]), Ai, G0)];
+        [RandomEffect(mt_blocks(obs, [Z, Z]), Ai, G0; name = "animal")];
         Rinv = mt_rinv(R0, obs),
     )
+    check("mme() LHS = blockdiag form", m.lhs, lhs; atol = 1e-12)
+    check("mme() RHS = blockdiag form", m.rhs, rhs; atol = 1e-12)
 
-    # 4. Solve MME and fit univariate benchmarks
-    b, (a,) = solutions(m, solve_mme(m))
+    # 5. Solve MME and fit univariate benchmarks
+    x = lhs \ rhs
+    b = x[m.blocks[1]]
+    a = reshape(x[m.blocks[2]], :, 2)           # rows: animals, cols: parities 1 and 2
     uni = [
         solve_mme(
             mme(Y[:, t], (X1, X2)[t], [RandomEffect(Z, Ai, G0[t, t])]; σ²e = R0[t, t]),
         ) for t = 1:2
     ]
 
+    println("\nHYS effects:")
     show_table(
-        effect = ["HYS 1", "HYS 2", string.(1:8)...],
-        FAT1 = [b[1:2]; a[:, 1]],
-        FAT2 = [b[3:4]; a[:, 2]],
-        FAT1_uni = uni[1],
-        FAT2_uni = uni[2],
+        hys = [lv1; lv2],
+        parity = [1, 1, 2, 2],
+        solution = b,
+        univariate = [uni[1][1:2]; uni[2][1:2]],
     )
+    ped.ebv_fat1, ped.ebv_fat2 = a[:, 1], a[:, 2]
+    ped.uni_fat1, ped.uni_fat2 = uni[1][3:end], uni[2][3:end]
     check("HYS (FAT1, FAT2)", b, [175.7, 219.6, 243.2, 240.6]; atol = 0.051)
     check(
         "animals",
@@ -108,12 +163,14 @@ function ex_06_3()
     )
 
     # 5. Multi-trait DYD of sire 1 from daughters 4, 6, and 8 (Section 6.4.2)
-    Ri = inv(R0)
-    ZRZ = [i in cow ? Ri : zeros(2, 2) for i = 1:8]
-    yd = zeros(8, 2)
+    R0i = inv(R0)
+    ZRZ = [i in cow ? R0i : zeros(2, 2) for i = 1:nrow(ped)]
+    yd = zeros(nrow(ped), 2)
     yd[cow, :] = Y - [X1 * b[1:2] X2 * b[3:4]]
     p = ebv_partition_mt(ped.sire, ped.dam, G0, ZRZ, yd, a)
-    W2prog = (Ri + 2inv(G0)) \ Ri
+    ped.dyd_fat1 = replace(first.(p.DYD), NaN => missing)    # missing: no progeny
+    ped.dyd_fat2 = replace(last.(p.DYD), NaN => missing)
+    W2prog = (R0i + 2inv(G0)) \ R0i
     check("W2prog", W2prog, [0.1713 0.0821; 0.1078 0.1244]; atol = 2e-4)
 
     # Note on book arithmetic correction:
@@ -129,5 +186,8 @@ function ex_06_3()
         atol = 0.02,
     )
 
-    (; b, a, partition = p)
+    println("\nPedigree with multi-trait and univariate EBV, and progeny yield deviations:")
+    show_table(ped)
+
+    (; ped, cows, b, a, partition = p)
 end

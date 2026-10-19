@@ -71,7 +71,12 @@ Simultaneous genetic evaluation of multiple genetically correlated traits:
   the general set-up with `mt_stack`, `mt_blocks` and `mt_rinv`.
   Multi-trait and univariate EBV, PEV and reliabilities are added as
   columns.
-- **`ex_06_2` (Section 6.2)**: Unequal design and missing traits across animals.
+- **`ex_06_2` (Section 6.3)**: Bivariate animal model with equal design
+  matrices and missing PWG records, on one data table. The MME of
+  `ex_06_1` are written out with missing records set to 0 and a padded
+  $R^{-1}$ (each calf contributes $(R_0[S,S])^{-1}$ on its observed
+  traits $S$), and checked against `mt_stack`, `mt_blocks` and
+  `mt_rinv`.
 - **`ex_06_3` (Section 6.3)**: Partition of multivariate EBVs and multi-trait reliability calculations.
 - **`ex_06_4` (Section 6.4)**: Multivariate analysis with zero residual covariance (e.g. traits measured on different animals).
 - **`ex_06_5` (Section 6.5)**: Multiple Across Country Evaluation (MACE) formulation for international dairy evaluations.

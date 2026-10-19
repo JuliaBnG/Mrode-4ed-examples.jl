@@ -292,7 +292,11 @@ Estimation of genetic and residual variance components:
   reductions $R(b)$ and $R(b, s)$, OLS as `C \ ms` and the GLS iteration
   as a short loop, all checked against the library; the estimates of the
   three methods are compared in a table.
-- **`ex_17_2` (Section 17.7)**: Restricted Maximum Likelihood (REML) via Expectation-Maximization (EM-REML) and Average Information (AI-REML).
+- **`ex_17_2` (Section 17.7)**: Restricted Maximum Likelihood (REML) via
+  Expectation-Maximization (EM-REML) and Average Information (AI-REML),
+  on one data table. The restricted log-likelihood at the starting
+  values and the first EM iterate are written out from the MME and
+  checked against `reml`; EBV at the estimates are added as a column.
 
 ---
 

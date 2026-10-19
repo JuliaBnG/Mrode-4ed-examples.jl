@@ -38,22 +38,37 @@ up to a constant, where ``C`` is the coefficient matrix of the MME built with
   ```
   Guaranteed monotonic convergence in likelihood, though slower than AI-REML.
 
+# Written Out
+The data are one table, one row per animal. The restricted log-likelihood at the
+starting values and the first EM iterate are written out from the MME and compared
+with `reml`; the EBV at the AI-REML estimates are added as a column.
+
 # Returns
 A `NamedTuple` with fields:
 - `r`: AI-REML result (`REMLResult`: estimates, log-likelihood, inverse AI matrix,
   iteration history and final MME solutions).
 - `em`: EM-REML result (`REMLResult`).
+- `ped`: The data with the EBV at the AI-REML estimates added.
 """
 function ex_17_2()
     println("Section 17.7: REML for an animal model")
 
-    # Step 1: Pedigree and phenotype data
-    ped = DataFrame(sire = [0, 0, 0, 1, 3, 1, 4, 3], dam = [0, 0, 0, 0, 2, 2, 5, 6])
-    calf = 4:8
-    sex = ["M", "F", "F", "M", "M"]
-    y = [2.6, 0.1, 1.0, 3.0, 1.0]
-    X, _ = incidence(sex; levels = ["M", "F"])
-    a = RandomEffect(incidence(calf, 8), ainv(ped), 0.2)
+    # Step 1: Pedigree and records, one row per animal (IDs are row numbers;
+    #    founders 1–3 have no records)
+    no3 = fill(missing, 3)
+    ped = DataFrame(
+        calf = 1:8,
+        sex = [no3; ["M", "F", "F", "M", "M"]],
+        sire = [0, 0, 0, 1, 3, 1, 4, 3],
+        dam = [0, 0, 0, 0, 2, 2, 5, 6],
+        y = [no3; [2.6, 0.1, 1.0, 3.0, 1.0]],
+    )
+    rec = dropmissing(ped, :y)
+    y = rec.y
+    X, _ = incidence(rec.sex; levels = ["M", "F"])
+    Z = incidence(rec.calf, nrow(ped))
+    Ai = ainv(ped)
+    a = RandomEffect(Z, Ai, 0.2)
 
     # Step 2: First iterate in detail (starting values: σ²e = 0.4, σ²a = 0.2)
     m = mme(y, X, [a]; σ²e = 0.4)
@@ -66,7 +81,7 @@ function ex_17_2()
     )
     check(
         "residuals",
-        y - [X a.Z] * x,
+        y - [X Z] * x,
         [0.2022, -0.3661, 0.3661, 0.6374, -0.8395];
         atol = 1e-4,
     )
@@ -76,6 +91,18 @@ function ex_17_2()
         [0.1884, 0.0028, 0.0131, 0.0878, 0.0180, 0.0883, 0.0554, 0.0537];
         atol = 1e-4,
     )
+
+    #    Restricted log-likelihood at the starting values, written out: with C and
+    #    r the MME in the R⁻¹ form, y'Py = y'R⁻¹y - θ̂'r and
+    #    log L_R = -½(log|C| + log|A| + N log σ²e + q log σ²a + y'Py)
+    σ²e0, σ²a0 = 0.4, 0.2
+    N, q = length(y), nrow(ped)
+    W = [X Z]
+    C = Matrix([X'X X'Z; Z'X Z'Z + σ²e0 / σ²a0 * Ai]) / σ²e0
+    rh = W'y / σ²e0
+    θ = C \ rh
+    logL0 = -(logdet(C) + logdet(inv(Matrix(Ai))) + N * log(σ²e0) + q * log(σ²a0) +
+              y'y / σ²e0 - θ'rh) / 2
 
     # Step 3: AI-REML estimation
     r = reml(y, X, [a]; σ²e = 0.4, method = :ai)
@@ -98,6 +125,7 @@ function ex_17_2()
         [0.2000, 0.3695, 0.5126, 0.5500, 0.5514, 0.5514];
         atol = 1e-4,
     )
+    check("log L_R at the starting values, written out", logL0, r.logLs[1]; atol = 1e-10)
     check(
         "log-likelihoods",
         r.logLs[1:6],
@@ -110,11 +138,22 @@ function ex_17_2()
     # Step 4: EM-REML comparison
     e1 = reml(y, X, [a]; σ²e = 0.4, method = :em, maxiter = 1)
     check("first EM iterate (σ²e, σ²a)", e1.history[:, 2], [0.6426, 0.2125])
+    #    written out (Eqns 17.5–17.6), from the MME at the starting values:
+    #    σ²a = (â'A⁻¹â + tr(A⁻¹Cᵃᵃ)σ²e)/q,  σ²e = (y'y - θ̂'W'y)/(N - r(X))
+    Ci = inv(C * σ²e0)                          # inverse of the λ-form coefficient matrix
+    â = θ[3:end]
+    σ²a1 = (â' * Ai * â + tr(Ai * Ci[3:end, 3:end]) * σ²e0) / q
+    σ²e1 = (y'y - θ' * (W'y)) / (N - rank(X))
+    check("first EM iterate, written out", [σ²e1, σ²a1], e1.history[:, 2]; atol = 1e-10)
     em = reml(y, X, [a]; σ²e = 0.4, method = :em, maxiter = 1000)
     check(
         "EM after 1000 iterates (σ²e, σ²a, logL)",
         [em.history[:, end]; em.logLs[end]],
         [0.4842, 0.5504, -2.1817],
     )
-    (; r, em)
+    ped.ebv = r.solutions[3:end]
+    println("\nEBV at the AI-REML estimates:")
+    show_table(ped)
+
+    (; r, em, ped)
 end

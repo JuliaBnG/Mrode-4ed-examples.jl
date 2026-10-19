@@ -332,4 +332,8 @@ High-performance linear solvers for systems with millions of equations:
   - Gauss-Seidel on data without and with genetic groups.
   - Preconditioned Conjugate Gradient (PCG) on data using matrix-free operations ($C \cdot d$).
 - **`ex_19_5` (Section 19.5.3)**: Reduced Animal Model with maternal
-  effects solved via Gauss-Seidel iteration.
+  effects solved via Gauss-Seidel iteration on the singular system. The
+  solution is compared with the constrained one of `ex_08_2`: random
+  effects and the estimable cell means herd + pen agree, the individual
+  fixed-effect solutions do not; parent solutions are returned as a
+  table.

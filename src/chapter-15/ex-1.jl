@@ -27,6 +27,13 @@ where:
   `threshold_model`).
 - Category probabilities by sire subclass are computed with `category_probabilities`.
 
+# Tables
+The data are one row per herd–sex–sire subclass with the counts of the three categories;
+for the linear model they are expanded to one row per calving with `stack` and row
+repetition. Sire solutions, standard errors, category probabilities (written out as
+``\\Phi(t_k - \\eta) - \\Phi(t_{k-1} - \\eta)`` and compared with `category_probabilities`)
+and the linear-model solutions are collected in a table of sires.
+
 # Returns
 A `ThresholdResult` object containing converged thresholds `t`, fixed effects `b`, sire
 effects `u`, and iteration history.
@@ -34,61 +41,26 @@ effects `u`, and iteration history.
 function ex_15_1()
     println("Example 15.1: threshold model for calving ease")
 
-    # 1. Calving ease category counts N (20 herd-sex-sire subclasses × 3 categories)
-    herd = [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-    sex = [
-        "M",
-        "F",
-        "M",
-        "F",
-        "M",
-        "F",
-        "M",
-        "F",
-        "M",
-        "F",
-        "M",
-        "M",
-        "F",
-        "M",
-        "F",
-        "M",
-        "M",
-        "F",
-        "F",
-        "M",
-    ]
-    sire = [1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4]
-    N = [
-        1 0 0;
-        1 0 0;
-        1 0 0;
-        0 1 0;
-        1 0 1;
-        3 0 0;
-        1 1 0;
-        0 1 0;
-        1 0 0;
-        2 0 0;
-        1 0 0;
-        0 0 1;
-        1 0 1;
-        1 0 0;
-        0 1 0;
-        0 0 1;
-        0 1 0;
-        1 0 0;
-        2 0 0;
-        2 0 0
-    ]
+    # 1. Calving ease: one row per herd–sex–sire subclass, with the number of
+    #    calvings in categories 1–3
+    sub = DataFrame(
+        herd = [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+        sex = split("M F M F M F M F M F M M F M F M M F F M"),
+        sire = [1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4],
+        n1 = [1, 1, 1, 0, 1, 3, 1, 0, 1, 2, 1, 0, 1, 1, 0, 0, 0, 1, 2, 2],
+        n2 = [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+        n3 = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0],
+    )
+    println(sub)
+    N = Matrix(sub[:, [:n1, :n2, :n3]])
 
     # 2. Sire pedigree and relationship matrix
     sped = DataFrame(sire = [0, 0, 1, 3], dam = [0, 0, 0, 0])
     Ai = Matrix(ainv(sped))
 
     # 3. Design matrices and threshold model fitting (Gianola & Foulley, 1983)
-    X = [first(incidence(herd)) first(incidence(sex; levels = ["M", "F"]))]
-    Z, _ = incidence(sire)
+    X = [first(incidence(sub.herd)) first(incidence(sub.sex; levels = ["M", "F"]))]
+    Z, _ = incidence(sub.sire)
     r = threshold_model(N, X, Z, Ai, 19; t0 = [0.468, 1.080], zero = [1, 3])
 
     check(
@@ -151,8 +123,11 @@ function ex_15_1()
 
     # 5. Sire-specific category probabilities:
     #    (a) For female calves in herd–year 1:
+    #        Pₖ = Φ(tₖ - η) - Φ(tₖ₋₁ - η), with t₀ = -∞ and t₃ = ∞
     η = r.b[1] + r.b[4] .+ r.u
     P = category_probabilities(r.t, η)
+    Fc = [cdf(Normal(), tk - e) for e in η, tk in [-Inf; r.t; Inf]]
+    check("Pₖ = Φ(tₖ - η) - Φ(tₖ₋₁ - η)", diff(Fc; dims = 2), P; atol = 1e-12)
     check(
         "P(category | herd 1, female, sire)",
         P,
@@ -170,16 +145,23 @@ function ex_15_1()
         atol = 2e-3,
     )
 
-    # 6. Comparison with linear sire model on raw category scores (1, 2, 3)
-    rec = [(j, k) for j in axes(N, 1) for k = 1:3 for _ = 1:N[j, k]]
-    j, y = first.(rec), Float64.(last.(rec))
+    # 6. Comparison with linear sire model on raw category scores (1, 2, 3):
+    #    one row per calving, by stacking the counts and repeating each row
+    long = stack(sub, [:n1, :n2, :n3]; variable_name = :score, value_name = :n)
+    long.row = repeat(1:nrow(sub), 3)           # subclass of each row
+    rec = long[reduce(vcat, fill.(1:nrow(long), long.n)), :]   # row i, n[i] times
+    rec.score = parse.(Int, chop.(rec.score; head = 1, tail = 0))
+    j, y = rec.row, Float64.(rec.score)
     m = mme(y, X[j, :], [RandomEffect(Z[j, :], Ai, 1 / 19)]; σ²e = 1.0)
     x = solve_mme(m; zero = [1])
-    show_table(
-        effect = ["herd 2", "male", "female", "sire " .* string.(1:4)...],
-        linear = x[2:8];
-        digits = 4,
-    )
+    println("\nLinear model on the scores, herd 2, male and female: ", round.(x[2:4]; digits = 4))
+
+    sires = DataFrame(sire = 1:4, s = r.u, se = se[7:10], s_linear = x[5:8])
+    sires.P1, sires.P2, sires.P3 = eachcol(P)
+    sires.Pbar1, sires.Pbar2, sires.Pbar3 = eachcol(Pbar)
+    println("\nSires: threshold-model solution and SE, linear-model solution, and category")
+    println("probabilities for herd 1 females (P) and over all subclasses (Pbar):")
+    show_table(sires; digits = 4)
 
     r
 end

@@ -270,7 +270,11 @@ Linear models for multibreed populations and commercial crossbreds:
 Evaluation of categorical and disease resistance traits:
 - **`ex_15_1` (Section 15.2)**: Threshold (probit) sire model for
   calving ease in three ordered categories (Gianola & Foulley, 1983) on
-  the underlying liability scale.
+  the underlying liability scale. Data are one row per subclass with
+  category counts, expanded to one row per calving with `stack` for the
+  linear comparison; category probabilities are written out, and sire
+  solutions, standard errors and probabilities are kept in a table of
+  sires.
 - **`ex_15_2` (Section 15.3)**: Joint analysis of continuous and binary
   threshold traits.
 

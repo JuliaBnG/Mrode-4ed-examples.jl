@@ -40,9 +40,11 @@ columns of the bull table, so the methods can be compared on the candidates.
 
 # Note on a Monomorphic SNP
 SNP 7 is 0 in all reference bulls (``z_7'z_7 = 0``), so the data carry no information
-on it and its inclusion probability should equal the prior ``1 - \\pi``. `bayes_snp`
-evaluates ``\\log 0`` and ``0/0`` in the likelihood of such a SNP and reports inclusion
-1 (BayesB) or 0 (BayesC, BayesCπ); its posterior mean effect is ≈ 0 either way.
+on it: its variance and inclusion are sampled from their priors, so that its inclusion
+probability is ``1 - \\pi`` (0.7 in BayesB, ``1 - \\mathrm{E}(\\pi \\mid y)`` in BayesCπ),
+and its effect is centred on zero. (Before Breeding v0.1.6, `bayes_snp` evaluated
+``\\log 0`` and ``0/0`` for such a SNP and reported inclusion 1 or 0; the resulting
+BayesCπ posterior ``\\pi`` of ≈ 0.67 was not a discrepancy of the book.)
 
 # Note on Monte Carlo Verification
 The book's first iteration values depend on its specific random numbers, and its posterior
@@ -151,20 +153,21 @@ function ex_11_9(; niter = 50_000, burnin = 10_000)
 
     check("BayesC/Cπ: σ²g", [res[:C].σ²g[1], res[:Cpi].σ²g[1]], [0.184, 0.162]; atol = 0.03)
 
-    # Note on text discrepancies:
-    # The book's BayesB SNP variances (≈0.30) and BayesCπ posterior π (0.51) are not
-    # reproduced (here ≈0.12–0.25 and ≈0.67, stable over seeds and chain lengths).
-    @printf(
-        "  BayesB mean σ²g = %.3f (book ≈ 0.30); BayesCπ π = %.2f (book 0.51)\n",
-        mean(res[:B].σ²g),
-        res[:Cpi].π
-    )
+    # BayesCπ: posterior π as in the book (0.501–0.507 over seeds)
+    check("BayesCπ: π", res[:Cpi].π, 0.51; atol = 0.02)
+    # Note on a text discrepancy: the book's BayesB SNP variances (≈0.30) are not
+    # reproduced (here ≈0.12 on average, stable over seeds and chain lengths).
+    @printf("  BayesB mean σ²g = %.3f (book ≈ 0.30)\n", mean(res[:B].σ²g))
 
-    # Note: SNP 7 is 0 in all reference bulls (z'z = 0), so the data carry no
-    # information on it and its inclusion probability should be the prior 1 - π.
-    # Breeding.bayes_snp evaluates log(0) and 0/0 for such a SNP, and reports
-    # inclusion 1 (BayesB) or 0 (BayesC/Cπ); its posterior mean effect is ≈ 0
-    # either way.
+    # SNP 7 is 0 in all reference bulls (z'z = 0): no information, so its
+    # inclusion probability is the prior 1 - π, i.e. 0.7 (BayesB) and 1 - E(π | y)
+    # (BayesCπ)
+    check(
+        "SNP 7 (z'z = 0): inclusion = 1 - π",
+        [res[:B].inclusion[7], res[:Cpi].inclusion[7]],
+        [0.7, 1 - res[:Cpi].π];
+        atol = 0.02,
+    )
     println("\nPosterior mean SNP effects (and inclusion probabilities) with the book's values:")
     show_table(snps)
     println("\nDGV of the bulls (uncentred genotypes, without the mean):")

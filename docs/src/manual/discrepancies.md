@@ -41,7 +41,12 @@ To ensure reproducibility, `Mrode4edExamples.jl` checks computed solutions again
 - **Example 11.9 (BayesA)**:
   The first-round residual estimate $\hat{e}_1$ is $-1.338$, whereas the text prints $-1.388$.
 - **Examples 11.10 & 11.12 (BayesB & BayesC$\pi$)**:
-  In BayesB, the printed posterior SNP variances ($\approx 0.30$) differ slightly from the MCMC stationary distribution ($\approx 0.12 - 0.25$). In BayesC$\pi$, the printed posterior inclusion $\pi = 0.51$ differs from the empirical posterior mean ($\approx 0.67$), which is stable across random number seeds. All other posterior means and GEBVs match closely.
+  In BayesB, the printed posterior SNP variances ($\approx 0.30$) differ
+  from the MCMC stationary distribution ($\approx 0.12$ on average). The
+  BayesC$\pi$ posterior $\pi = 0.51$ is reproduced (0.50–0.51 over
+  seeds); an earlier mismatch ($\approx 0.67$) was a bug in `bayes_snp`
+  for a SNP monomorphic in the reference (SNP 7), fixed in Breeding
+  v0.1.6. All other posterior means and GEBVs match closely.
 
 ---
 

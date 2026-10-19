@@ -120,8 +120,10 @@ Models accounting for both the direct genetic ability of an animal and the mater
 
 Evaluates indirect genetic effects (IGE) / associative effects in group-housed animals:
 - **`ex_09_1` (Sections 9.2–9.4)**: Mixed model with direct ($a_D$) and
-  social ($a_S$) breeding values of pigs in pens, with a random group
-  effect, and the equivalent correlated-residual model (Section 9.4).
+  social ($a_S$) breeding values of pigs in pens, on one data table.
+  The associative incidence matrix is built as $Z_S = (VV' - I)Z_D$ and
+  the MME (Eqn 9.6) as $T'T + \Sigma$; the equivalent correlated-residual
+  model uses $R = \sigma^2_e[(1-\rho)I + \rho VV']$ (Section 9.4).
   Partition of DBV and SBV (Section 9.3), and total breeding values
   ($TBV_i = a_{D,i} + (n-1)a_{S,i}$).
 

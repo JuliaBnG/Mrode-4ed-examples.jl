@@ -17,14 +17,17 @@ notes are gathered below by chapter for easy reference.
 ## Chapter 6: Multivariate Models
 
 - **Example 6.3 (`ex_06_3`) — Daughter Yield Deviation for Sire 1**:
-  In Section 6.4.2, the book computes $\mathrm{DYD}$ for sire 1 using a
-  first-parity yield deviation for daughter 4 of
-  $\mathrm{YD}_{4,1} = 25.7$. However, from the printed record
-  $y_{4,1} = 201$ and HYS solution $\hat{b}_1 = 175.7$, the subtraction
-  is $201 - 175.7 = 25.3$. Correcting that arithmetic slip gives
-  $\mathrm{DYD}_1 = [24.254, 32.154]'$ (instead of the printed
-  $[24.521, 32.154]'$) and $M_3\mathrm{DYD}_1 = [7.388, 7.358]'$
-  (instead of $[7.439, 7.387]'$).
+  In Section 6.4.2 (p. 111), the book computes $\mathrm{DYD}$ for sire 1
+  with a first-parity yield deviation for daughter 4 printed as
+  $\mathrm{YD}_{4,1} = 201 - 175.5 = 25.7$. The HYS 1 solution for FAT1
+  is $\hat{b}_1 = 175.7$ (p. 110), so $\mathrm{YD}_{4,1} = 201 - 175.7
+  = 25.3$. The printed line is also inconsistent with itself, since
+  $201 - 175.5 = 25.5$. In addition, the corrected value of daughter 4
+  enters the DYD equation as $53.399$, although the line above gives
+  $54.399$. With $\mathrm{YD}_{4,1} = 25.3$, the corrected value is
+  $50.6 + 2.999 = 53.599$. Then $\mathrm{DYD}_1 = [24.254, 32.154]'$
+  (instead of the printed $[24.521, 32.154]'$) and
+  $M_3\mathrm{DYD}_1 = [7.388, 7.358]'$ (instead of $[7.439, 7.387]'$).
 - **Example 6.4 (`ex_06_4`) — Zero Residual Covariance**:
   In the printed solutions table, animal 6 is listed as
   $(-5.012, -2.098)$, an exact duplicate of animal 5. In the pedigree,
@@ -48,6 +51,12 @@ notes are gathered below by chapter for easy reference.
      maternal grandson (bull 3) as $4\hat{a}_3 - 2\hat{a}_7$, omitting
      the maternal granddam group ($\mathrm{G5}$) of bull 3; the exact
      progeny contribution is $4\hat{a}_3 - 2\hat{a}_7 - \hat{g}_5$.
+  4. On p. 122, in the product for $W_1$ of bull 2, the $(2,2)$ element
+     of the second matrix is printed as $-0.99693$. It is $+0.99693$,
+     the same matrix as for bull 3, and only $+0.99693$ gives the
+     printed $W_1$. In $Z'R^{-1}Z + G^{-1}\alpha_{bull}$ on the same
+     page, the $(1,1)$ element of the diagonal matrix is printed as
+     $0.72630$, while the text gives the inverse as $0.72639$.
 
 ---
 
@@ -83,7 +92,8 @@ notes are gathered below by chapter for easy reference.
   In the table of results, the 6 selection candidates are labelled
   25–30 rather than 21–26 (in the 26-animal pedigree of Table 11.1,
   ancestors are 1–12, reference bulls are 13–20, and candidates are
-  21–26).
+  21–26). The row for reference bull 20 is also printed twice, the
+  second time without an ID.
 - **Example 11.6 (`ex_11_6`) — GLS Base Allele Frequency**:
   For SNP 1, the text reports a Generalized Least Squares (GLS) base
   mean gene content $\hat{\mu} = 2\hat{p}$ of $0.575$. Evaluating
@@ -106,6 +116,9 @@ notes are gathered below by chapter for easy reference.
   2. The text states a correlation of $0.999$ between the SNP-based and
      haplotype-based $\mathrm{DGV}$s, whereas the correlation computed
      from the book's own printed solution vectors is $0.992$.
+  3. In the printed SNP-based $G$, element $(3,5)$ is $0.414$ while
+     element $(5,3)$ is $0.167$. Recomputing $G$ from the phased SNPs
+     gives $0.167$ for both.
 - **Example 11.9 (`ex_11_9`) — BayesA Starting Residual**:
   At the deterministic starting values ($\mu^{(0)} = 9.888$ and
   $g_j^{(0)} = 0.05$), the first bull's residual is
@@ -128,8 +141,10 @@ notes are gathered below by chapter for easy reference.
 - **Example 12.2 (`ex_12_2`) — APY Inverse Ordering and Sign Slip**:
   The matrix $G_{\mathrm{APY}}^{-1}$ is printed in the textbook with the
   4 core bulls (15, 20, 22, 26) ordered first, followed by the 10
-  non-core bulls, rather than in original bull ID order (13–26). In the
-  solutions table, the minus sign on bull 17's $\mathrm{DGV}$ is
+  non-core bulls, rather than in original bull ID order (13–26). In
+  that core-first order, the $(2,2)$ element is printed as $0.412$
+  (which repeats the $(1,4)$ element) instead of $10.618$. In the list
+  of APY $\mathrm{DGV}$s, the minus sign on bull 17's $\mathrm{DGV}$ is
   omitted ($0.471$ printed instead of $-0.471$).
 
 ---
@@ -147,11 +162,12 @@ notes are gathered below by chapter for easy reference.
   symmetric roles in the design) show a slight rounding asymmetry
   ($-0.060$ and $+0.055$ vs exact $\pm 0.057$).
 - **Example 14.4 (`ex_14_3`) — Genomic Breed of Origin**:
-  The matrix $G^{(1)}$ printed in the text does not match Equation
-  (14.25) (for instance, its $(1,1)$ entry is printed as $1.815$ instead
-  of $0.607$), but the final BOA solutions in Table 14.9 *were* computed
-  from the correct $G^{(1)}$ of Equation (14.25) and are reproduced
-  here.
+  The matrices $G^{(1)}$ and $G^{(2)}$ printed in the text do not match
+  Equation (14.25). For instance, the $(1,1)$ entry of $G^{(1)}$ is
+  printed as $1.815$ instead of $0.607$, and the $(5,5)$ entry of
+  $G^{(2)}$ (the first breed-2 animal) as $3.882$ instead of $0.766$.
+  The final BOA solutions in Table 14.9 *were* computed from the
+  correct matrices of Equation (14.25) and are reproduced here.
 
 ---
 

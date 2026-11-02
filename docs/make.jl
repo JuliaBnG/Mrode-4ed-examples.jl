@@ -1,6 +1,16 @@
 using Documenter
 using Mrode4edExamples
 
+# JuliaBnG Sepia and Black themes, added to Documenter's theme picker.
+# The files in src/assets/juliabng/ are built by docs-themes/build.jl in the
+# juliabng.github.io repository; rebuild there rather than editing them here.
+const JULIABNG_ASSETS = [
+    [asset("assets/juliabng/$t.css"; class = :css, islocal = true,
+           attributes = Dict(Symbol("data-theme-name") => t))
+     for t in ("juliabng-sepia", "juliabng-black")];
+    "assets/juliabng/themes.js"
+]
+
 makedocs(
     sitename = "Mrode4edExamples.jl",
     authors = "Xijiang Yu",
@@ -11,6 +21,7 @@ makedocs(
         canonical = "https://juliabng.github.io/Mrode-4ed-examples/",
         size_threshold_warn = 200 * 2^10,
         size_threshold = 300 * 2^10,
+        assets = JULIABNG_ASSETS,
     ),
     pages = [
         "Home" => "index.md",

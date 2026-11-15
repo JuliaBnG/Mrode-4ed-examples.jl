@@ -113,8 +113,10 @@ function ex_17_2()
     r = reml(y, X, [a]; σ²e = 0.4, method = :ai)
     show_table(
         iterate = 1:length(r.logLs),
-        σ²e = r.history[1, 1:(end-1)],
-        σ²a = r.history[2, 1:(end-1)],
+        # one column per log-likelihood (Breeding 0.3 records the final
+        # iterate too; 0.2 had one more column than logLs)
+        σ²e = r.history[1, 1:length(r.logLs)],
+        σ²a = r.history[2, 1:length(r.logLs)],
         logL = r.logLs;
         digits = 4,
     )
